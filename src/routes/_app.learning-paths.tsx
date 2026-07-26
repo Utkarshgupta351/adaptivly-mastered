@@ -3,29 +3,57 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, Lock, Clock, Sparkles, ArrowRight, Zap, BookOpen, Code2, Server, Brain } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { CheckCircle2, Lock, Clock, Sparkles, ArrowRight, Zap, BookOpen, Code2, Server, Brain, Globe, Cpu } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useAuth, supabaseBrowser } from "@/hooks/use-auth";
+import { LEARNING_PATHS } from "@/routes/onboarding";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/learning-paths")({ component: LearningPaths });
 
-const paths = [
-  { name: "FAANG Full Prep", desc: "12-week adaptive DSA + System Design + Behavioral", weeks: 12, progress: 37, active: true },
-  { name: "DSA Intensive", desc: "6-week deep dive on algorithms and data structures", weeks: 6, progress: 0 },
-  { name: "System Design Pro", desc: "8-week program covering distributed systems", weeks: 8, progress: 0 },
-];
-
-const topics = [
-  { name: "Arrays & Hashing", status: "done", diff: "Easy", time: "8h", problems: 25, icon: Code2 },
-  { name: "Two Pointers", status: "done", diff: "Easy", time: "6h", problems: 18, icon: Code2 },
-  { name: "Sliding Window", status: "done", diff: "Medium", time: "10h", problems: 20, icon: Code2 },
-  { name: "Stack & Queues", status: "current", diff: "Medium", time: "12h", problems: 22, progress: 65, icon: Code2 },
-  { name: "Binary Search", status: "next", diff: "Medium", time: "10h", problems: 20, icon: Code2 },
-  { name: "Linked Lists", status: "next", diff: "Medium", time: "8h", problems: 15, icon: Code2 },
-  { name: "Trees & BST", status: "locked", diff: "Hard", time: "16h", problems: 30, icon: Brain },
-  { name: "Graphs", status: "locked", diff: "Hard", time: "20h", problems: 35, icon: Brain },
-  { name: "Dynamic Programming", status: "locked", diff: "Hard", time: "24h", problems: 42, icon: Brain },
-  { name: "System Design", status: "locked", diff: "Expert", time: "20h", problems: 15, icon: Server },
-];
+const topicsByPath: Record<string, Array<{ name: string; diff: string; time: string; icon: any }>> = {
+  "FAANG Full Prep": [
+    { name: "Arrays & Hashing", diff: "Easy", time: "8h", icon: Code2 },
+    { name: "Two Pointers", diff: "Easy", time: "6h", icon: Code2 },
+    { name: "Sliding Window", diff: "Medium", time: "10h", icon: Code2 },
+    { name: "Stack & Queues", diff: "Medium", time: "12h", icon: Code2 },
+    { name: "Binary Search", diff: "Medium", time: "10h", icon: Code2 },
+    { name: "Linked Lists", diff: "Medium", time: "8h", icon: Code2 },
+    { name: "Trees & BST", diff: "Hard", time: "16h", icon: Brain },
+    { name: "Graphs", diff: "Hard", time: "20h", icon: Brain },
+    { name: "Dynamic Programming", diff: "Hard", time: "24h", icon: Brain },
+    { name: "System Design", diff: "Expert", time: "20h", icon: Server },
+  ],
+  "DSA Intensive": [
+    { name: "Arrays & Hashing", diff: "Easy", time: "8h", icon: Code2 },
+    { name: "Two Pointers", diff: "Easy", time: "6h", icon: Code2 },
+    { name: "Binary Search", diff: "Medium", time: "10h", icon: Code2 },
+    { name: "Trees & BST", diff: "Hard", time: "16h", icon: Brain },
+    { name: "Graphs", diff: "Hard", time: "20h", icon: Brain },
+    { name: "Dynamic Programming", diff: "Hard", time: "24h", icon: Brain },
+  ],
+  "System Design Pro": [
+    { name: "High Level Architecture", diff: "Medium", time: "12h", icon: Server },
+    { name: "Database Scaling & Sharding", diff: "Hard", time: "16h", icon: Server },
+    { name: "Caching & CDN", diff: "Medium", time: "10h", icon: Server },
+    { name: "Load Balancers & Gateways", diff: "Medium", time: "8h", icon: Server },
+    { name: "Distributed Messaging & Queues", diff: "Hard", time: "14h", icon: Server },
+  ],
+  "Full Stack Dev": [
+    { name: "Frontend & React", diff: "Medium", time: "15h", icon: Globe },
+    { name: "Node.js & API Design", diff: "Medium", time: "15h", icon: Server },
+    { name: "SQL & NoSQL Databases", diff: "Medium", time: "12h", icon: Server },
+    { name: "CI/CD & Deployment", diff: "Hard", time: "10h", icon: Globe },
+  ],
+  "AI/ML Engineer": [
+    { name: "Python for Data Science", diff: "Easy", time: "10h", icon: Cpu },
+    { name: "Linear Algebra & Probability", diff: "Medium", time: "14h", icon: Cpu },
+    { name: "Classical ML Algorithms", diff: "Medium", time: "18h", icon: Brain },
+    { name: "Deep Learning & Neural Nets", diff: "Hard", time: "25h", icon: Brain },
+    { name: "LLMs & RAG Architectures", diff: "Hard", time: "20h", icon: Brain },
+  ],
+};
 
 const diffColors: Record<string, string> = {
   Easy: "border-emerald-brand/40 text-emerald-brand",
@@ -35,160 +63,153 @@ const diffColors: Record<string, string> = {
 };
 
 function LearningPaths() {
+  const { user } = useAuth();
+  const [activePath, setActivePath] = useState("FAANG Full Prep");
+  const [solvedCount, setSolvedCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    supabaseBrowser
+      .from("profiles")
+      .select("learning_path")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.learning_path) setActivePath(data.learning_path);
+      });
+
+    supabaseBrowser
+      .from("user_problem_status")
+      .select("id", { count: "exact" })
+      .eq("user_id", user.id)
+      .eq("status", "solved")
+      .then(({ count }) => {
+        setSolvedCount(count ?? 0);
+      });
+  }, [user]);
+
+  const selectPath = async (name: string) => {
+    setActivePath(name);
+    if (user) {
+      const { error } = await supabaseBrowser
+        .from("profiles")
+        .upsert({ id: user.id, learning_path: name });
+      if (error) {
+        toast.error(error.message || "Failed to switch path.");
+      } else {
+        toast.success(`Switched active path to ${name}!`);
+      }
+    }
+  };
+
+  const currentTopics = topicsByPath[activePath] ?? topicsByPath["FAANG Full Prep"];
+  const totalTopics = currentTopics.length;
+
   return (
     <div className="space-y-6">
       <PageHeader title="Learning Paths" description="Your adaptive roadmap to becoming interview-ready.">
-        <Button variant="outline" className="rounded-xl">Switch path</Button>
-        <Button className="bg-gradient-primary shadow-elegant rounded-xl gap-2">
-          <Zap className="h-4 w-4" /> Continue
+        <Button className="bg-gradient-primary shadow-elegant rounded-xl gap-2" asChild>
+          <Link to="/practice"><Zap className="h-4 w-4" /> Start Practice</Link>
         </Button>
       </PageHeader>
 
       {/* Path selector */}
       <div className="grid gap-4 md:grid-cols-3">
-        {paths.map((p) => (
-          <Card
-            key={p.name}
-            className={`relative overflow-hidden border p-5 shadow-soft transition-all cursor-pointer hover:-translate-y-0.5 hover:shadow-elegant ${p.active ? "border-primary/50 bg-primary/5" : "border-border/40"}`}
-          >
-            {p.active && (
-              <Badge className="absolute top-3 right-3 bg-gradient-primary text-[10px]">Active</Badge>
-            )}
-            <div className="flex items-center gap-3 mb-3">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow">
-                <BookOpen className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="font-bold text-sm">{p.name}</div>
-                <div className="text-xs text-muted-foreground">{p.weeks} weeks</div>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed mb-3">{p.desc}</p>
-            {p.progress > 0 && (
-              <>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-muted-foreground">Progress</span>
-                  <span className="font-semibold text-primary">{p.progress}%</span>
-                </div>
-                <Progress value={p.progress} className="h-1.5" />
-              </>
-            )}
-          </Card>
-        ))}
-      </div>
-
-      {/* Active path overview */}
-      <Card className="relative overflow-hidden border-0 p-0 shadow-elegant">
-        <div className="absolute inset-0 bg-gradient-hero opacity-60" />
-        <div className="relative p-8">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <Badge className="bg-gradient-primary gap-1.5 mb-3">
-                <Sparkles className="h-3 w-3" /> Current Path
-              </Badge>
-              <h2 className="text-2xl font-black md:text-3xl">FAANG Software Engineer — Full Prep</h2>
-              <p className="mt-2 text-muted-foreground text-sm">
-                A 12-week adaptive program covering DSA, System Design, and behavioral rounds.
-              </p>
-              <div className="mt-4 flex flex-wrap items-center gap-6 text-sm">
-                <div><span className="text-muted-foreground">Progress</span> <span className="ml-1 font-bold text-primary">37%</span></div>
-                <div><span className="text-muted-foreground">Est. completion</span> <span className="ml-1 font-bold">Mar 24</span></div>
-                <div><span className="text-muted-foreground">Level</span> <span className="ml-1 font-bold">Intermediate</span></div>
-                <div><span className="text-muted-foreground">Topics done</span> <span className="ml-1 font-bold">3 / 10</span></div>
-              </div>
-            </div>
-          </div>
-          <Progress value={37} className="mt-6 h-2.5" />
-        </div>
-      </Card>
-
-      {/* AI Recommendation */}
-      <Card className="border-primary/30 bg-primary/5 p-5 shadow-soft">
-        <div className="flex items-start gap-4">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <div className="flex-1">
-            <div className="text-sm font-bold text-primary">Adaptive insight</div>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              You're moving fast through arrays! We've unlocked a bonus track on advanced hashmaps.
-              Your pace puts you 3 days ahead of schedule.
-            </p>
-          </div>
-          <Button variant="outline" size="sm" className="rounded-xl shrink-0">Explore</Button>
-        </div>
-      </Card>
-
-      {/* Topic list */}
-      <div className="space-y-3">
-        <h2 className="font-bold text-lg">Topics</h2>
-        {topics.map((t, i) => {
-          const isLocked = t.status === "locked";
-          const isDone = t.status === "done";
-          const isCurrent = t.status === "current";
-          const isNext = t.status === "next";
+        {LEARNING_PATHS.map((p) => {
+          const isActive = activePath === p.id;
+          const Icon = p.icon;
           return (
             <Card
-              key={t.name}
-              className={`group border p-5 shadow-soft transition-all ${
-                !isLocked && "hover:shadow-elegant hover:-translate-y-0.5"
-              } ${isCurrent ? "border-primary/40 bg-primary/5" : "border-border/40"} ${
-                isLocked ? "opacity-60" : ""
+              key={p.id}
+              onClick={() => selectPath(p.id)}
+              className={`relative overflow-hidden border p-5 shadow-soft transition-all cursor-pointer hover:-translate-y-0.5 hover:shadow-elegant ${
+                isActive ? "border-primary/50 bg-primary/5 ring-2 ring-primary/20" : "border-border/40"
               }`}
             >
-              <div className="flex flex-col gap-4 md:flex-row md:items-center">
-                <div className="flex items-center gap-4 flex-1">
-                  <div
-                    className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-sm font-black ${
-                      isDone
-                        ? "bg-emerald-brand/15 text-emerald-brand"
-                        : isCurrent
-                        ? "bg-gradient-primary text-primary-foreground shadow-glow"
-                        : isLocked
-                        ? "bg-muted text-muted-foreground"
-                        : "bg-primary/10 text-primary"
-                    }`}
-                  >
-                    {isDone ? (
-                      <CheckCircle2 className="h-5 w-5" />
-                    ) : isLocked ? (
-                      <Lock className="h-4.5 w-4.5" />
-                    ) : (
-                      i + 1
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-bold">{t.name}</div>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                      <Badge variant="outline" className={`h-5 ${diffColors[t.diff]}`}>{t.diff}</Badge>
-                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{t.time}</span>
-                      <span className="flex items-center gap-1"><Code2 className="h-3 w-3" />{t.problems} problems</span>
-                    </div>
-                    {isCurrent && t.progress && (
-                      <div className="mt-3 max-w-xs">
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-muted-foreground">In progress</span>
-                          <span className="font-semibold text-primary">{t.progress}%</span>
-                        </div>
-                        <Progress value={t.progress} className="h-1.5" />
-                      </div>
-                    )}
-                  </div>
+              {isActive && (
+                <Badge className="absolute top-3 right-3 bg-gradient-primary text-[10px]">Active</Badge>
+              )}
+              <div className="flex items-center gap-3 mb-3">
+                <div className={`grid h-10 w-10 place-items-center rounded-xl ${p.bg}`}>
+                  <Icon className={`h-5 w-5 ${p.color}`} />
                 </div>
-                <Button
-                  variant={isCurrent ? "default" : "outline"}
-                  size="sm"
-                  disabled={isLocked}
-                  className={`rounded-xl gap-1.5 shrink-0 ${isCurrent ? "bg-gradient-primary shadow-elegant" : ""}`}
-                >
-                  {isDone ? "Review" : isCurrent ? "Continue" : isLocked ? "Locked" : "Start"}
-                  {!isLocked && <ArrowRight className="h-3.5 w-3.5" />}
-                </Button>
+                <div>
+                  <h3 className="font-bold">{p.label}</h3>
+                  <span className="text-xs text-muted-foreground">{p.weeks} weeks program</span>
+                </div>
               </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
             </Card>
           );
         })}
       </div>
+
+      {/* Active Roadmap */}
+      <Card className="border-border/40 p-6 shadow-soft">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+          <div>
+            <Badge className="mb-2 bg-gradient-primary text-white">Roadmap</Badge>
+            <h2 className="text-xl font-bold">{activePath} Curriculum</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Master topics sequentially to unlock next levels</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <span className="text-xs text-muted-foreground">Overall Solved</span>
+              <div className="text-lg font-black">{solvedCount} problems</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {currentTopics.map((topic, i) => {
+            const Icon = topic.icon;
+            // First 2 topics open, others unlocked based on solvedCount
+            const isUnlocked = i <= Math.min(Math.floor(solvedCount / 2) + 1, currentTopics.length - 1);
+            const isDone = i < Math.floor(solvedCount / 2);
+
+            return (
+              <div
+                key={topic.name}
+                className={`flex items-center gap-4 rounded-xl border p-4 transition-all ${
+                  isDone
+                    ? "border-emerald-brand/30 bg-emerald-brand/5"
+                    : isUnlocked
+                    ? "border-primary/30 bg-card hover:border-primary/60 shadow-soft"
+                    : "border-border/30 bg-muted/20 opacity-60"
+                }`}
+              >
+                <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${
+                  isDone ? "bg-emerald-brand/10 text-emerald-brand" : isUnlocked ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                }`}>
+                  {isDone ? <CheckCircle2 className="h-5 w-5" /> : isUnlocked ? <Icon className="h-5 w-5" /> : <Lock className="h-5 w-5" />}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm">{topic.name}</span>
+                    <Badge variant="outline" className={`text-[10px] ${diffColors[topic.diff]}`}>{topic.diff}</Badge>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> Est. {topic.time}</span>
+                  </div>
+                </div>
+
+                <div>
+                  {isDone ? (
+                    <Badge className="bg-emerald-brand/15 text-emerald-brand hover:bg-emerald-brand/20 border-emerald-brand/30">Completed</Badge>
+                  ) : isUnlocked ? (
+                    <Button size="sm" className="rounded-xl bg-gradient-primary gap-1" asChild>
+                      <Link to="/practice">Start <ArrowRight className="h-3.5 w-3.5" /></Link>
+                    </Button>
+                  ) : (
+                    <Badge variant="outline" className="text-muted-foreground">Locked</Badge>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
     </div>
   );
 }

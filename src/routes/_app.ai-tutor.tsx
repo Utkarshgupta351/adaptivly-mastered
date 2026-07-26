@@ -4,9 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
+import { getChatSessions, getChatMessages, createChatSession, sendMessage, renameChatSession, deleteChatSession } from "@/server-actions/ai-tutor";
 import {
   Bot, Send, Sparkles, MessageSquare, Plus, User, Copy, ThumbsUp, ThumbsDown,
-  Code2, RefreshCw, Lightbulb, BookOpen,
+  Code2, RefreshCw, Lightbulb, BookOpen, Loader2, Trash2, Pencil, Check, X, Search
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
@@ -17,22 +20,6 @@ const suggested = [
   { text: "How does TCP three-way handshake work?", icon: BookOpen },
   { text: "Walk me through building an LRU cache in Python", icon: Code2 },
   { text: "What's the difference between B-tree and B+ tree?", icon: Sparkles },
-];
-
-const history = [
-  { title: "Explain Dijkstra's algorithm", when: "2h ago" },
-  { title: "Difference between OS threads and processes", when: "Yesterday" },
-  { title: "How to design a URL shortener", when: "2 days ago" },
-  { title: "Kadane's algorithm walkthrough", when: "3 days ago" },
-  { title: "ACID properties explained", when: "5 days ago" },
-];
-
-const INIT_MESSAGES = [
-  { role: "user", content: "Explain dynamic programming in simple terms" },
-  {
-    role: "assistant",
-    content: "Dynamic programming is like solving a big puzzle by first solving smaller versions of it, then reusing those answers.\n\n**Two key ideas:**\n\n1. **Overlapping subproblems** — the same smaller puzzle shows up multiple times\n2. **Optimal substructure** — the best answer to the big puzzle is built from the best answers to the small ones\n\nA classic example is computing Fibonacci numbers. Instead of recomputing `fib(5)` every time you need it, you compute it once and store the result — this is called **memoization**.",
-  },
 ];
 
 function renderContent(text: string) {
@@ -52,70 +39,272 @@ function renderContent(text: string) {
 }
 
 function AITutor() {
-  const [messages, setMessages] = useState(INIT_MESSAGES);
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [activeHistory, setActiveHistory] = useState(0);
+  const [optimisticUserMsg, setOptimisticUserMsg] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editTitleValue, setEditTitleValue] = useState("");
+  const [chatError, setChatError] = useState<string | null>(null);
+  const [lastMessageSent, setLastMessageSent] = useState<string | null>(null);
+  const [hasAutoSelected, setHasAutoSelected] = useState(false);
+
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data: sessions = [], isLoading: sessionsLoading } = useQuery({
+    queryKey: ["ai_chat_sessions"],
+    queryFn: async () => {
+      if (!token) return [];
+      return getChatSessions({ data: { token } });
+    },
+    enabled: !!token,
+  });
+
+  useEffect(() => {
+    if (sessions.length > 0 && !activeSessionId && !sessionsLoading && !hasAutoSelected) {
+      setActiveSessionId(sessions[0].id);
+      setHasAutoSelected(true);
+    }
+  }, [sessions, activeSessionId, sessionsLoading, hasAutoSelected]);
+
+  const { data: serverMessages = [], isLoading: messagesLoading } = useQuery({
+    queryKey: ["ai_chat_messages", activeSessionId],
+    queryFn: async () => {
+      if (!activeSessionId || !token) return [];
+      return getChatMessages({ data: { token, sessionId: activeSessionId } });
+    },
+    enabled: !!activeSessionId && !!token,
+  });
+
+  // Combine server messages with optimistic message if sending
+  const messages = optimisticUserMsg 
+    ? [...serverMessages, { role: "user", content: optimisticUserMsg }]
+    : serverMessages;
+
+  const createSessionMutation = useMutation({
+    mutationFn: async () => {
+      if (!token) throw new Error("No token");
+      return createChatSession({ data: { token } });
+    },
+    onSuccess: (newSession) => {
+      queryClient.invalidateQueries({ queryKey: ["ai_chat_sessions"] });
+      setActiveSessionId(newSession.id);
+    },
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async ({ sessionId, message }: { sessionId: string; message: string }) => {
+      if (!token) throw new Error("No token");
+      return sendMessage({ data: { token, sessionId, message } });
+    },
+    onSuccess: (data, variables) => {
+      setOptimisticUserMsg(null);
+      queryClient.invalidateQueries({ queryKey: ["ai_chat_messages", variables.sessionId] });
+      queryClient.invalidateQueries({ queryKey: ["ai_chat_sessions"] });
+    },
+    onError: () => {
+      setOptimisticUserMsg(null);
+      setChatError("AI is temporarily unavailable. Connection lost.");
+    }
+  });
+
+  const deleteSessionMutation = useMutation({
+    mutationFn: async (sessionId: string) => {
+      if (!token) throw new Error("No token");
+      return deleteChatSession({ data: { token, sessionId } });
+    },
+    onSuccess: (data, deletedSessionId) => {
+      queryClient.invalidateQueries({ queryKey: ["ai_chat_sessions"] });
+      if (activeSessionId === deletedSessionId) {
+        setActiveSessionId(null);
+      }
+    },
+  });
+
+  const renameSessionMutation = useMutation({
+    mutationFn: async ({ sessionId, title }: { sessionId: string; title: string }) => {
+      if (!token) throw new Error("No token");
+      return renameChatSession({ data: { token, sessionId, title } });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ai_chat_sessions"] });
+      setEditingSessionId(null);
+    },
+  });
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, sendMessageMutation.isPending]);
 
-  const send = () => {
-    if (!input.trim() || loading) return;
-    const userMsg = input.trim();
+  // Focus input box on load
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const send = async (textOverride?: string) => {
+    const userMsg = (textOverride || input).trim();
+    if (!userMsg || sendMessageMutation.isPending || createSessionMutation.isPending) return;
+    
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
-    setLoading(true);
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            "Great question! Let me break that down step by step...\n\nThis is a fundamental concept that comes up frequently in technical interviews. Here's a clear explanation:\n\n**Key insight:** Always start by identifying the pattern, then apply the approach systematically.",
-        },
-      ]);
-      setLoading(false);
-    }, 1200);
+    setOptimisticUserMsg(userMsg);
+    setLastMessageSent(userMsg);
+    setChatError(null);
+    
+    try {
+      let targetSessionId = activeSessionId;
+      if (!targetSessionId) {
+        const newSession = await createSessionMutation.mutateAsync();
+        targetSessionId = newSession.id;
+        setActiveSessionId(targetSessionId);
+      }
+      
+      sendMessageMutation.mutate({ sessionId: targetSessionId as string, message: userMsg });
+    } catch (err: any) {
+      setOptimisticUserMsg(null);
+      setChatError("AI is temporarily unavailable. Connection lost.");
+    }
   };
 
+  const handleRetry = () => {
+    if (lastMessageSent) {
+      send(lastMessageSent);
+    }
+  };
+
+  const startNewChat = () => {
+    setActiveSessionId(null);
+    setHasAutoSelected(true);
+    setInput("");
+    setOptimisticUserMsg(null);
+    setChatError(null);
+    setLastMessageSent(null);
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 50);
+  };
+
+  // Filter sessions by search query
+  const filteredSessions = sessions.filter((s: any) => 
+    s.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="grid h-[calc(100vh-8rem)] gap-4 lg:grid-cols-[260px_1fr]">
+    <div className="grid h-[calc(100vh-8rem)] gap-4 lg:grid-cols-[280px_1fr]">
       {/* Sidebar */}
       <Card className="hidden overflow-hidden border-border/40 p-0 shadow-soft lg:flex lg:flex-col">
-        <div className="p-3 border-b border-border/40">
-          <Button className="w-full bg-gradient-primary shadow-elegant rounded-xl gap-2" size="sm">
+        <div className="p-3 border-b border-border/40 space-y-2">
+          <Button onClick={startNewChat} className="w-full bg-gradient-primary shadow-elegant rounded-xl gap-2" size="sm">
             <Plus className="h-4 w-4" /> New chat
           </Button>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search chats..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-8 pl-8 text-xs rounded-lg border-border/40 bg-muted/30 focus:bg-background"
+            />
+          </div>
         </div>
-        <div className="p-3">
+        <div className="p-3 overflow-y-auto flex-1">
           <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-2 mb-2">Recent</div>
-          <div className="space-y-0.5">
-            {history.map((h, i) => (
-              <button
-                key={h.title}
-                onClick={() => setActiveHistory(i)}
-                className={`flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition-all ${
-                  activeHistory === i ? "bg-primary/10 text-primary" : "hover:bg-muted/50"
+          <div className="space-y-1">
+            {filteredSessions.map((h: any) => (
+              <div
+                key={h.id}
+                className={`group relative flex items-center gap-2 rounded-xl p-2.5 transition-all ${
+                  activeSessionId === h.id ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted/50"
                 }`}
               >
-                <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-xs font-medium">{h.title}</div>
-                  <div className="text-[10px] text-muted-foreground mt-0.5">{h.when}</div>
-                </div>
-              </button>
+                {editingSessionId === h.id ? (
+                  <div className="flex w-full items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                    <Input
+                      value={editTitleValue}
+                      onChange={(e) => setEditTitleValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          renameSessionMutation.mutate({ sessionId: h.id, title: editTitleValue });
+                        } else if (e.key === "Escape") {
+                          setEditingSessionId(null);
+                        }
+                      }}
+                      className="h-7 text-xs px-1.5 focus-visible:ring-1 focus-visible:ring-primary rounded"
+                      autoFocus
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 rounded shrink-0 hover:bg-emerald-brand/10 hover:text-emerald-brand"
+                      onClick={() => renameSessionMutation.mutate({ sessionId: h.id, title: editTitleValue })}
+                    >
+                      <Check className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 rounded shrink-0 hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setEditingSessionId(null)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setActiveSessionId(h.id)}
+                      className="flex-1 min-w-0 text-left flex items-start gap-2"
+                    >
+                      <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-xs">{h.title}</div>
+                        <div className="text-[9px] text-muted-foreground mt-0.5">
+                          {new Date(h.updated_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </button>
+                    <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 shrink-0 transition-opacity">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 rounded hover:bg-muted"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingSessionId(h.id);
+                          setEditTitleValue(h.title);
+                        }}
+                      >
+                        <Pencil className="h-3 w-3 text-muted-foreground" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 rounded hover:bg-destructive/10 hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteSessionMutation.mutate(h.id);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
             ))}
+            {filteredSessions.length === 0 && !sessionsLoading && (
+              <div className="text-center text-xs text-muted-foreground py-4">No chats found.</div>
+            )}
           </div>
         </div>
         <div className="mt-auto p-3 border-t border-border/40">
           <div className="rounded-xl bg-primary/5 border border-primary/20 p-3">
             <div className="text-xs font-bold text-primary flex items-center gap-1.5 mb-1">
-              <Sparkles className="h-3 w-3" /> Pro Model Active
+              <Sparkles className="h-3 w-3" /> Mentor Active
             </div>
-            <p className="text-[11px] text-muted-foreground">Using GPT-4 Turbo for deeper explanations.</p>
+            <p className="text-[11px] text-muted-foreground">Using your profile context to adapt.</p>
           </div>
         </div>
       </Card>
@@ -131,24 +320,24 @@ function AITutor() {
             <div className="text-sm font-bold">Adaptivly AI Tutor</div>
             <div className="text-xs text-emerald-brand flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-brand inline-block animate-pulse" />
-              Online · GPT-4 Turbo
+              Online · Context Aware
             </div>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <Badge variant="outline" className="hidden sm:flex gap-1.5 border-primary/30 bg-primary/5 text-primary">
-              <Sparkles className="h-3 w-3" /> 248 chats
+              <Sparkles className="h-3 w-3" /> {sessions.length} chats
             </Badge>
-            <Button variant="ghost" size="icon" className="rounded-xl" aria-label="New chat">
-              <RefreshCw className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Refresh" onClick={() => queryClient.invalidateQueries({ queryKey: ["ai_chat_sessions"] })}>
+              <RefreshCw className={`h-4 w-4 ${sessionsLoading ? "animate-spin" : ""}`} />
             </Button>
           </div>
         </div>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
-          {messages.map((m, i) => (
+          {messages.map((m: any, i: number) => (
             <div key={i} className={`flex gap-3 ${m.role === "user" ? "justify-end" : ""}`}>
-              {m.role === "assistant" && (
+              {(m.role === "assistant" || m.role === "model") && (
                 <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow self-start">
                   <Bot className="h-4.5 w-4.5" />
                 </div>
@@ -161,19 +350,6 @@ function AITutor() {
                 }`}
               >
                 {renderContent(m.content)}
-                {m.role === "assistant" && (
-                  <div className="mt-4 flex gap-1 pt-2 border-t border-border/30">
-                    <Button variant="ghost" size="sm" className="h-6 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground">
-                      <Copy className="h-3 w-3" /> Copy
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-6 gap-1 px-2 text-xs text-muted-foreground hover:text-emerald-brand">
-                      <ThumbsUp className="h-3 w-3" /> Good
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-6 gap-1 px-2 text-xs text-muted-foreground hover:text-destructive">
-                      <ThumbsDown className="h-3 w-3" /> Bad
-                    </Button>
-                  </div>
-                )}
               </div>
               {m.role === "user" && (
                 <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-muted border border-border/40 self-start">
@@ -182,7 +358,7 @@ function AITutor() {
               )}
             </div>
           ))}
-          {loading && (
+          {(sendMessageMutation.isPending || createSessionMutation.isPending || messagesLoading) && (
             <div className="flex gap-3">
               <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow">
                 <Bot className="h-4.5 w-4.5" />
@@ -198,7 +374,7 @@ function AITutor() {
         </div>
 
         {/* Suggestions */}
-        {messages.length <= 2 && (
+        {messages.length === 0 && (
           <div className="border-t border-border/40 p-4 shrink-0">
             <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-3">
               Suggested prompts
@@ -207,7 +383,7 @@ function AITutor() {
               {suggested.map((s) => (
                 <button
                   key={s.text}
-                  onClick={() => setInput(s.text)}
+                  onClick={() => send(s.text)}
                   className="flex items-start gap-2.5 rounded-xl border border-border/40 p-3 text-left text-xs transition-all hover:border-primary/40 hover:bg-primary/5"
                 >
                   <s.icon className="h-3.5 w-3.5 shrink-0 text-primary mt-0.5" />
@@ -218,10 +394,21 @@ function AITutor() {
           </div>
         )}
 
+        {/* Error Handling */}
+        {chatError && (
+          <div className="mx-5 my-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center justify-between">
+            <span>{chatError}</span>
+            <Button size="sm" variant="outline" className="h-7 text-xs border-destructive/30 hover:bg-destructive/20 bg-background text-destructive" onClick={handleRetry}>
+              Retry
+            </Button>
+          </div>
+        )}
+
         {/* Input */}
         <div className="border-t border-border/40 p-4 shrink-0">
           <div className="flex gap-2">
             <Input
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
@@ -229,8 +416,8 @@ function AITutor() {
               className="h-12 rounded-xl border-border/50 bg-muted/30 focus:bg-background"
             />
             <Button
-              onClick={send}
-              disabled={!input.trim() || loading}
+              onClick={() => send()}
+              disabled={!input.trim() || sendMessageMutation.isPending || createSessionMutation.isPending}
               className="h-12 w-12 rounded-xl bg-gradient-primary shadow-elegant p-0 shrink-0"
               aria-label="Send"
             >

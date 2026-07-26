@@ -14,6 +14,9 @@ export const getDashboardStats = createServerFn({ method: "GET" })
     const { supabase } = await import("../db");
     const userId = await requireUserId(data.token);
 
+    // Update streak based on activity before fetching profile
+    await supabase.rpc("update_streak", { p_user_id: userId });
+
     const [profileRes, submissionsRes, achievementsRes, studyTodayRes] = await Promise.all([
       supabase.from("profiles").select("xp, coins, streak, daily_goal").eq("id", userId).single(),
       supabase.from("user_problem_status").select("solved").eq("user_id", userId).eq("solved", true),

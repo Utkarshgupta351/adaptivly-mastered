@@ -260,6 +260,10 @@ export const submitCode = createServerFn({ method: "POST" })
           duration_minutes: 0,
         }, { onConflict: "user_id,session_date", ignoreDuplicates: false });
       }
+
+      // Check for newly unlocked badges
+      const { checkAndAwardBadges } = await import("./achievements");
+      await checkAndAwardBadges({ data: { token: data.token } });
     }
 
     return {

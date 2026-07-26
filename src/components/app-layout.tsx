@@ -1,16 +1,26 @@
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useState, useEffect, type ReactNode } from "react";
 import {
   LayoutDashboard, GitBranch, BookOpen, Calendar, Code2, MessagesSquare, Bot,
   StickyNote, Youtube, LineChart, Trophy, User, Settings, ChevronLeft, ChevronRight,
-  Search, Bell, Moon, Sun, Menu, Sparkles, Layers, Zap, X,
+  Search, Bell, Moon, Sun, Menu, Sparkles, Layers, Zap, X, LogOut,
 } from "lucide-react";
 import { Logo } from "@/components/landing";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
+import { useAuth, supabaseBrowser } from "@/hooks/use-auth";
+
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, color: "text-primary" },
@@ -32,7 +42,15 @@ const bottomNav = [
   { to: "/settings", label: "Settings", icon: Settings, color: "text-muted-foreground" },
 ] as const;
 
-function SidebarInner({ collapsed, onNav }: { collapsed: boolean; onNav?: () => void }) {
+function SidebarInner({
+  collapsed,
+  onNav,
+  onLogout,
+}: {
+  collapsed: boolean;
+  onNav?: () => void;
+  onLogout?: () => void;
+}) {
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   const Item = ({
@@ -122,26 +140,26 @@ function SidebarInner({ collapsed, onNav }: { collapsed: boolean; onNav?: () => 
         {bottomNav.map((n) => (
           <Item key={n.to} {...n} />
         ))}
+        <button
+          type="button"
+          onClick={onLogout}
+          title={collapsed ? "Log out" : undefined}
+          className={cn(
+            "group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+            "text-destructive/80 hover:bg-destructive/10 hover:text-destructive"
+          )}
+        >
+          <LogOut className="h-4.5 w-4.5 shrink-0" />
+          {!collapsed && <span className="truncate">Log out</span>}
+          {collapsed && (
+            <div className="pointer-events-none absolute left-full ml-3 z-50 hidden rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium shadow-elegant group-hover:flex whitespace-nowrap">
+              Log out
+            </div>
+          )}
+        </button>
       </div>
 
-      {/* Upgrade CTA */}
-      {!collapsed && (
-        <div className="m-3 rounded-2xl overflow-hidden border border-primary/20 bg-gradient-primary p-4 shadow-elegant">
-          <div className="flex items-center gap-2 text-xs font-bold text-primary-foreground">
-            <Zap className="h-3.5 w-3.5" /> Upgrade to Pro
-          </div>
-          <p className="mt-1 text-[11px] text-primary-foreground/70 leading-relaxed">
-            Unlock unlimited mock interviews &amp; advanced AI tutor.
-          </p>
-          <Button
-            size="sm"
-            variant="secondary"
-            className="mt-3 h-7 w-full text-xs font-bold rounded-lg"
-          >
-            Upgrade now →
-          </Button>
-        </div>
-      )}
+
     </div>
   );
 }
@@ -151,6 +169,40 @@ export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, toggle } = useTheme();
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const { user, signOut } = useAuth();
+
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate({ to: "/login" });
+  };
+
+  // Load real profile data for header
+  const [profile, setProfile] = useState<{ streak: number; xp: number; full_name: string; assessment_completed?: boolean } | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    supabaseBrowser
+      .from("profiles")
+      .select("streak, xp, full_name, assessment_completed")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => { if (data) setProfile(data); });
+  }, [user]);
+
+  // Redirect to assessment if not completed
+  useEffect(() => {
+    if (profile && profile.assessment_completed === false && path !== "/assessment") {
+      navigate({ to: "/assessment" });
+    }
+  }, [profile, path, navigate]);
+
+  const initials = profile?.full_name
+    ? profile.full_name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+    : user?.email?.slice(0, 2).toUpperCase() ?? "??";
+
+  const xpDisplay = profile ? (profile.xp >= 1000 ? `${(profile.xp / 1000).toFixed(1)}K` : String(profile.xp)) : "0";
+  const streak = profile?.streak ?? 0;
 
   // Derive page title from current path
   const pageTitle = [...nav, ...bottomNav].find(
@@ -163,10 +215,10 @@ export function AppLayout() {
       <aside
         className={cn(
           "sticky top-0 hidden h-screen shrink-0 transition-all duration-300 lg:block",
-          collapsed ? "w-[72px]" : "w-64"
+          collapsed ? "w-[64px]" : "w-56"
         )}
       >
-        <SidebarInner collapsed={collapsed} />
+        <SidebarInner collapsed={collapsed} onLogout={handleLogout} />
         {/* Collapse toggle */}
         <button
           id="sidebar-collapse-toggle"
@@ -189,11 +241,11 @@ export function AppLayout() {
             className="absolute inset-0 bg-background/80 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="absolute left-0 top-0 h-full w-64 shadow-elegant">
-            <SidebarInner collapsed={false} onNav={() => setMobileOpen(false)} />
+          <aside className="absolute left-0 top-0 h-full w-56 shadow-elegant">
+            <SidebarInner collapsed={false} onNav={() => setMobileOpen(false)} onLogout={handleLogout} />
           </aside>
           <button
-            className="absolute top-4 left-[268px] z-10 flex h-8 w-8 items-center justify-center rounded-full bg-card border border-border"
+            className="absolute top-4 left-[236px] z-10 flex h-8 w-8 items-center justify-center rounded-full bg-card border border-border"
             onClick={() => setMobileOpen(false)}
           >
             <X className="h-4 w-4" />
@@ -243,7 +295,7 @@ export function AppLayout() {
               variant="outline"
               className="hidden gap-1.5 border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 sm:flex font-semibold"
             >
-              🔥 42
+              🔥 {streak}
             </Badge>
 
             {/* XP badge */}
@@ -251,7 +303,7 @@ export function AppLayout() {
               variant="outline"
               className="hidden gap-1.5 border-primary/30 bg-primary/10 text-primary sm:flex font-semibold"
             >
-              <Sparkles className="h-3 w-3" /> 12.4K XP
+              <Sparkles className="h-3 w-3" /> {xpDisplay} XP
             </Badge>
 
             <Button variant="ghost" size="icon" onClick={toggle} className="rounded-xl" aria-label="Toggle theme">
@@ -263,19 +315,56 @@ export function AppLayout() {
               <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive ring-2 ring-background" />
             </Button>
 
-            {/* Avatar */}
-            <button
-              id="user-avatar"
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary text-sm font-bold text-primary-foreground shadow-glow hover:scale-105 transition-transform"
-              aria-label="User menu"
-            >
-              JD
-            </button>
+            {/* Avatar menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  id="user-avatar"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary text-sm font-bold text-primary-foreground shadow-glow hover:scale-105 transition-transform"
+                  aria-label="User menu"
+                >
+                  {initials}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm font-semibold leading-none">
+                      {profile?.full_name ?? "Account"}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user?.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="cursor-pointer">
+                    <User className="h-4 w-4" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="cursor-pointer">
+                    <Settings className="h-4 w-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-destructive focus:text-destructive"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-4 w-4" />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-4 md:p-8">
+        <main className={cn("flex-1 min-h-0 min-w-0 flex flex-col", path.startsWith("/practice") ? "p-0 overflow-hidden" : "p-4 md:p-8 overflow-y-auto")}>
           <Outlet />
         </main>
       </div>

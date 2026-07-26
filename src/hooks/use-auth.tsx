@@ -41,14 +41,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    // Listen for auth state changes
-    const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange((_, session) => {
+    // Listen for auth state changes (including email confirmation callback)
+    const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       setLoading(false);
+
+      // Auto-redirect to dashboard after email confirmation
+      if (event === "SIGNED_IN" && session) {
+        const hash = window.location.hash;
+        const params = new URLSearchParams(hash.replace("#", "?"));
+        const type = params.get("type");
+        const onAuthPage = ["/verify-email", "/login", "/signup"].some(p =>
+          window.location.pathname.startsWith(p)
+        );
+        if (type === "signup" || onAuthPage) {
+          // Check if onboarding is done
+          const { data: profile } = await supabaseBrowser
+            .from("profiles")
+            .select("onboarding_done")
+            .eq("id", session.user.id)
+            .maybeSingle();
+          if (!profile?.onboarding_done) {
+            window.location.href = "/onboarding";
+          } else {
+            window.location.href = "/dashboard";
+          }
+        }
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
 
   const signOut = async () => {
     await supabaseBrowser.auth.signOut();

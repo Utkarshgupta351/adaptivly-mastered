@@ -13,11 +13,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AppAchievementsRouteImport } from './routes/_app.achievements'
 import { Route as AppAiTutorRouteImport } from './routes/_app.ai-tutor'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
+import { Route as AppAssessmentRouteImport } from './routes/_app.assessment'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppFlashcardsRouteImport } from './routes/_app.flashcards'
 import { Route as AppLearningPathsRouteImport } from './routes/_app.learning-paths'
@@ -49,6 +51,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -72,6 +79,11 @@ const AppAiTutorRoute = AppAiTutorRouteImport.update({
 const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAssessmentRoute = AppAssessmentRouteImport.update({
+  id: '/assessment',
+  path: '/assessment',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -134,11 +146,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/achievements': typeof AppAchievementsRoute
   '/ai-tutor': typeof AppAiTutorRoute
   '/analytics': typeof AppAnalyticsRoute
+  '/assessment': typeof AppAssessmentRoute
   '/dashboard': typeof AppDashboardRoute
   '/flashcards': typeof AppFlashcardsRoute
   '/learning-paths': typeof AppLearningPathsRoute
@@ -155,11 +169,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/achievements': typeof AppAchievementsRoute
   '/ai-tutor': typeof AppAiTutorRoute
   '/analytics': typeof AppAnalyticsRoute
+  '/assessment': typeof AppAssessmentRoute
   '/dashboard': typeof AppDashboardRoute
   '/flashcards': typeof AppFlashcardsRoute
   '/learning-paths': typeof AppLearningPathsRoute
@@ -178,11 +194,13 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_app/achievements': typeof AppAchievementsRoute
   '/_app/ai-tutor': typeof AppAiTutorRoute
   '/_app/analytics': typeof AppAnalyticsRoute
+  '/_app/assessment': typeof AppAssessmentRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/flashcards': typeof AppFlashcardsRoute
   '/_app/learning-paths': typeof AppLearningPathsRoute
@@ -201,11 +219,13 @@ export interface FileRouteTypes {
     | '/'
     | '/forgot-password'
     | '/login'
+    | '/onboarding'
     | '/signup'
     | '/verify-email'
     | '/achievements'
     | '/ai-tutor'
     | '/analytics'
+    | '/assessment'
     | '/dashboard'
     | '/flashcards'
     | '/learning-paths'
@@ -222,11 +242,13 @@ export interface FileRouteTypes {
     | '/'
     | '/forgot-password'
     | '/login'
+    | '/onboarding'
     | '/signup'
     | '/verify-email'
     | '/achievements'
     | '/ai-tutor'
     | '/analytics'
+    | '/assessment'
     | '/dashboard'
     | '/flashcards'
     | '/learning-paths'
@@ -244,11 +266,13 @@ export interface FileRouteTypes {
     | '/_app'
     | '/forgot-password'
     | '/login'
+    | '/onboarding'
     | '/signup'
     | '/verify-email'
     | '/_app/achievements'
     | '/_app/ai-tutor'
     | '/_app/analytics'
+    | '/_app/assessment'
     | '/_app/dashboard'
     | '/_app/flashcards'
     | '/_app/learning-paths'
@@ -267,6 +291,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  OnboardingRoute: typeof OnboardingRoute
   SignupRoute: typeof SignupRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
 }
@@ -299,6 +324,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -334,6 +366,13 @@ declare module '@tanstack/react-router' {
       path: '/analytics'
       fullPath: '/analytics'
       preLoaderRoute: typeof AppAnalyticsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/assessment': {
+      id: '/_app/assessment'
+      path: '/assessment'
+      fullPath: '/assessment'
+      preLoaderRoute: typeof AppAssessmentRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/dashboard': {
@@ -420,6 +459,7 @@ interface AppRouteChildren {
   AppAchievementsRoute: typeof AppAchievementsRoute
   AppAiTutorRoute: typeof AppAiTutorRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
+  AppAssessmentRoute: typeof AppAssessmentRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppFlashcardsRoute: typeof AppFlashcardsRoute
   AppLearningPathsRoute: typeof AppLearningPathsRoute
@@ -437,6 +477,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAchievementsRoute: AppAchievementsRoute,
   AppAiTutorRoute: AppAiTutorRoute,
   AppAnalyticsRoute: AppAnalyticsRoute,
+  AppAssessmentRoute: AppAssessmentRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppFlashcardsRoute: AppFlashcardsRoute,
   AppLearningPathsRoute: AppLearningPathsRoute,
@@ -457,6 +498,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  OnboardingRoute: OnboardingRoute,
   SignupRoute: SignupRoute,
   VerifyEmailRoute: VerifyEmailRoute,
 }

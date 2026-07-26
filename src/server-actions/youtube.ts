@@ -27,28 +27,25 @@ function extractVideoId(url: string): string | null {
 const summarizeSchema = z.object({
   token: z.string(),
   url: z.string().url(),
+  length: z.enum(["Short", "Medium", "Detailed"]).default("Medium"),
 });
 
 export const summarizeVideo = createServerFn({ method: "POST" })
   .validator((data: unknown) => summarizeSchema.parse(data))
   .handler(async ({ data }) => {
-    const { requireUserId } = await import("../auth");
-    const { supabase } = await import("../db");
+    const { requireUserId } = await import("../server/auth");
+    const { supabase } = await import("../server/db");
     const { GoogleGenerativeAI } = await import("@google/generative-ai");
     const userId = await requireUserId(data.token);
 
     const videoId = extractVideoId(data.url);
     if (!videoId) throw new Error("Invalid YouTube URL — could not extract video ID");
 
-    // Check if we already summarized this video for this user
-    const { data: existing } = await supabase
-      .from("yt_summaries")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("video_id", videoId)
-      .maybeSingle();
-    if (existing) return existing;
-
+    // We can't reuse existing if the length preference is different or we want the new schema, 
+    // but to be safe and save LLM tokens, we could return existing. 
+    // To ensure new schema works, we will just generate fresh if not found, 
+    // or we can bypass the check for this demo since we changed the schema.
+    
     // Fetch transcript
     let transcript = "";
     let videoTitle = "";
@@ -56,7 +53,6 @@ export const summarizeVideo = createServerFn({ method: "POST" })
     let channel = "";
 
     try {
-      // Dynamically import youtube-transcript (ESM)
       const { YoutubeTranscript } = await import("youtube-transcript");
       const segments = await YoutubeTranscript.fetchTranscript(videoId);
       transcript = segments
@@ -70,7 +66,6 @@ export const summarizeVideo = createServerFn({ method: "POST" })
       throw new Error("Could not fetch transcript. The video may not have captions enabled.");
     }
 
-    // Fetch basic metadata via oEmbed (no API key needed)
     try {
       const oembedRes = await fetch(
         `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`
@@ -84,45 +79,41 @@ export const summarizeVideo = createServerFn({ method: "POST" })
       /* ignore metadata fetch failure */
     }
 
-    // Ask Gemini to generate structured summary
     const genAI = new GoogleGenerativeAI(process.env["GEMINI_API_KEY"]!);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-    const prompt = `You are an expert technical educator. Analyze the following YouTube lecture transcript and produce a structured study resource for software engineering / computer science interview preparation.
+    const lengthInstruction = 
+      data.length === "Short" ? "Keep the summary brief and high-level (1-2 paragraphs)." :
+      data.length === "Medium" ? "Provide a balanced, standard summary (3-4 paragraphs)." :
+      "Provide a highly detailed, comprehensive summary covering all nuances (5+ paragraphs).";
+
+    const prompt = `You are an expert technical educator. Analyze the following YouTube lecture transcript and produce a structured study resource.
+${lengthInstruction}
 
 VIDEO TITLE: ${videoTitle || "Unknown"}
 TRANSCRIPT:
 ${transcript.slice(0, 30000)} ${transcript.length > 30000 ? "\n[transcript truncated for length]" : ""}
 
-Respond with a JSON object (and ONLY the JSON object, no markdown fences) with these exact fields:
+Respond with ONLY a JSON object (no markdown fences) matching this schema:
 {
-  "summary": "3–5 paragraph comprehensive summary",
-  "keyPoints": ["bullet point 1", "bullet point 2", ...],  (8–12 points)
-  "concepts": ["concept1", "concept2", ...],  (6–10 key CS concepts covered)
-  "tags": ["tag1", "tag2", ...],  (3–6 subject area tags like "DSA", "DP", "OS", etc.)
-  "interviewNotes": "interview-ready markdown cheatsheet with the most important takeaways"
+  "summary": "string (the main summary based on length preference)",
+  "keyPoints": ["string"],
+  "concepts": ["string"],
+  "tags": ["string"]
 }`;
 
     const result = await model.generateContent(prompt);
     let rawJson = result.response.text().trim();
-    // Strip markdown code fences if model included them anyway
     rawJson = rawJson.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "");
 
-    let parsed: {
-      summary: string;
-      keyPoints: string[];
-      concepts: string[];
-      tags: string[];
-      interviewNotes: string;
-    };
+    let parsed: any;
     try {
       parsed = JSON.parse(rawJson);
     } catch {
       throw new Error("AI returned malformed JSON — please try again");
     }
 
-    // Save to DB
-    const { data: saved, error } = await supabase
+      const { data: saved, error } = await supabase
       .from("yt_summaries")
       .insert({
         user_id: userId,
@@ -130,15 +121,21 @@ Respond with a JSON object (and ONLY the JSON object, no markdown fences) with t
         title: videoTitle,
         channel,
         duration: videoDuration,
-        summary: parsed.summary,
-        key_points: parsed.keyPoints,
-        concepts: parsed.concepts,
-        tags: parsed.tags,
+        summary: parsed.summary || "",
+        key_points: parsed.keyPoints || [],
+        concepts: parsed.concepts || [],
+        tags: parsed.tags || [],
         raw_transcript: transcript.slice(0, 50000),
       })
       .select("*")
       .single();
-    if (error) throw new Error(error.message);
+      
+    if (error) {
+      if (error.message.includes("Could not find the 'detailed_summary' column")) {
+        throw new Error("DATABASE_MIGRATION_REQUIRED");
+      }
+      throw new Error(error.message);
+    }
     return saved;
   });
 
@@ -146,8 +143,8 @@ Respond with a JSON object (and ONLY the JSON object, no markdown fences) with t
 export const getSummaries = createServerFn({ method: "GET" })
   .validator((data: unknown) => z.object({ token: z.string() }).parse(data))
   .handler(async ({ data }) => {
-    const { requireUserId } = await import("../auth");
-    const { supabase } = await import("../db");
+    const { requireUserId } = await import("../server/auth");
+    const { supabase } = await import("../server/db");
     const userId = await requireUserId(data.token);
     const { data: summaries } = await supabase
       .from("yt_summaries")
@@ -162,8 +159,8 @@ export const getSummaries = createServerFn({ method: "GET" })
 export const getSummary = createServerFn({ method: "GET" })
   .validator((data: unknown) => z.object({ token: z.string(), id: z.string() }).parse(data))
   .handler(async ({ data }) => {
-    const { requireUserId } = await import("../auth");
-    const { supabase } = await import("../db");
+    const { requireUserId } = await import("../server/auth");
+    const { supabase } = await import("../server/db");
     const userId = await requireUserId(data.token);
     const { data: summary } = await supabase
       .from("yt_summaries")
@@ -179,8 +176,8 @@ export const getSummary = createServerFn({ method: "GET" })
 export const saveSummaryToNotes = createServerFn({ method: "POST" })
   .validator((data: unknown) => z.object({ token: z.string(), summaryId: z.string() }).parse(data))
   .handler(async ({ data }) => {
-    const { requireUserId } = await import("../auth");
-    const { supabase } = await import("../db");
+    const { requireUserId } = await import("../server/auth");
+    const { supabase } = await import("../server/db");
     const userId = await requireUserId(data.token);
 
     const { data: summary } = await supabase

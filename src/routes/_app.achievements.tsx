@@ -1,33 +1,16 @@
 import { PageHeader } from "@/components/app-layout";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { createFileRoute } from "@tanstack/react-router";
-import { Flame, Trophy, Zap, Code2, Bot, Target, Award, Crown, Sparkles, Lock, TrendingUp, Star } from "lucide-react";
+import { Flame, Trophy, Zap, Code2, Bot, Target, Award, Crown, Sparkles, Lock, TrendingUp } from "lucide-react";
+import { useAuth, supabaseBrowser } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
+import { BADGES } from "@/server/functions/achievements"; // Wait, I can't import this either! I need to duplicate the BADGES array.
 
 export const Route = createFileRoute("/_app/achievements")({ component: Achievements });
-
-const badges = [
-  { name: "First Problem", icon: Code2, earned: true, rarity: "Common", desc: "Solved your first problem" },
-  { name: "Week Warrior", icon: Zap, earned: true, rarity: "Common", desc: "7-day study streak" },
-  { name: "Streak Master", icon: Flame, earned: true, rarity: "Rare", desc: "30-day streak achieved" },
-  { name: "AI Whisperer", icon: Bot, earned: true, rarity: "Rare", desc: "50+ AI tutor sessions" },
-  { name: "Sharpshooter", icon: Target, earned: true, rarity: "Rare", desc: "90%+ accuracy in a session" },
-  { name: "Century Club", icon: Trophy, earned: true, rarity: "Epic", desc: "100 problems solved" },
-  { name: "DP Master", icon: Award, earned: false, rarity: "Epic", desc: "Complete DP track with 80%+ accuracy" },
-  { name: "FAANG Ready", icon: Crown, earned: false, rarity: "Legendary", desc: "Pass 5 FAANG-level mock interviews" },
-];
-
-const leaderboard = [
-  { rank: 1, name: "Alex Kim", xp: 45820, streak: 72, problems: 812 },
-  { rank: 2, name: "Priya S.", xp: 38400, streak: 58, problems: 674 },
-  { rank: 3, name: "James W.", xp: 31200, streak: 44, problems: 543 },
-  { rank: 4, name: "You", xp: 12480, streak: 42, problems: 348, self: true },
-  { rank: 5, name: "Marcus C.", xp: 11200, streak: 28, problems: 298 },
-  { rank: 6, name: "Aisha P.", xp: 9800, streak: 21, problems: 254 },
-];
 
 const rarityConfig: Record<string, { color: string; glow: boolean; label: string }> = {
   Common: { color: "border-border/40 text-muted-foreground", glow: false, label: "" },
@@ -36,13 +19,201 @@ const rarityConfig: Record<string, { color: string; glow: boolean; label: string
   Legendary: { color: "border-amber-500/40 text-amber-500 bg-amber-500/5", glow: true, label: "⭐" },
 };
 
-const milestones = [
-  { label: "Next badge", name: "DP Master", progress: 68, left: "32% accuracy needed" },
-  { label: "Level 15", name: "2,520 XP to go", progress: 83, left: "Level 14 → 15" },
-  { label: "200 day streak", name: "Keep it up!", progress: 21, left: "158 more days" },
+// Map icon strings from DB to Lucide components
+const iconMap: Record<string, any> = {
+  "🔥": Flame,
+  "⚡": Zap,
+  "🏆": Trophy,
+  "💎": Crown,
+  "🎯": Target,
+  "🚀": Sparkles,
+  "💀": Award,
+  "🤖": Bot,
+  "📺": Bot,
+  "🃏": Award,
+  "📝": Code2,
+  "🎤": Bot,
+  "⭐": Crown,
+  "📊": Award,
+  "🧠": Award,
+  "🕸️": Award,
+};
+
+const BADGES_LIST = [
+  // Practice - Problems Solved
+  { id: "solved_1",    name: "First Problem",      desc: "Solved your first problem",   icon: "⚡", xpReward: 50,  category: "Practice" },
+  { id: "solved_10",   name: "10 Problems",        desc: "Solved 10 problems",          icon: "🏆", xpReward: 150, category: "Practice" },
+  { id: "solved_50",   name: "50 Problems",        desc: "Solved 50 problems",          icon: "💎", xpReward: 500, category: "Practice" },
+  { id: "solved_100",  name: "100 Problems",       desc: "Solved 100 problems",         icon: "🎯", xpReward: 1500, category: "Practice" },
+
+  // Practice - Mastery
+  { id: "master_array",name: "Arrays Master",      desc: "Solved 5 Array problems",     icon: "📊", xpReward: 300, category: "Practice" },
+  { id: "master_dp",   name: "DP Master",          desc: "Solved 5 DP problems",        icon: "🧠", xpReward: 500, category: "Practice" },
+  { id: "master_graph",name: "Graph Master",       desc: "Solved 5 Graph problems",     icon: "🕸️", xpReward: 400, category: "Practice" },
+
+  // Streaks
+  { id: "streak_7",    name: "7 Day Streak",       desc: "Maintained a 7-day streak",   icon: "🔥", xpReward: 200, category: "Streak" },
+  { id: "streak_30",   name: "30 Day Streak",      desc: "Maintained a 30-day streak",  icon: "🔥", xpReward: 1000, category: "Streak" },
+
+  // Features
+  { id: "ai_explorer", name: "AI Tutor Explorer",  desc: "Had your first AI Tutor chat",icon: "🤖", xpReward: 100, category: "AI" },
+  { id: "mock_expert", name: "Mock Interview Expert", desc: "Passed a mock interview",  icon: "🎤", xpReward: 500, category: "Interviews" },
+  { id: "flash_champ", name: "Flashcard Champion", desc: "Reviewed 50 flashcards",      icon: "🃏", xpReward: 300, category: "Flashcards" },
 ];
 
 function Achievements() {
+  const { user } = useAuth();
+
+  const dataQuery = useQuery({
+    queryKey: ["achievements-page", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+
+      // 1. Fetch Achievements
+      const { data: earned } = await supabaseBrowser
+        .from("user_achievements")
+        .select("badge_id, earned_at")
+        .eq("user_id", user.id);
+
+      const earnedMap: Record<string, string> = {};
+      for (const e of earned ?? []) earnedMap[e.badge_id] = e.earned_at;
+
+      const [profileRes, solvedRes, arrayRes, dpRes, graphRes, chatRes, mockPassRes, flashRes] = await Promise.all([
+        supabaseBrowser.from("profiles").select("streak, xp").eq("id", user.id).single(),
+        supabaseBrowser.from("user_problem_status").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("solved", true),
+        supabaseBrowser.from("submissions").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "Accepted").eq("problems.topic" as never, "Arrays"),
+        supabaseBrowser.from("submissions").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "Accepted").eq("problems.topic" as never, "Dynamic Programming"),
+        supabaseBrowser.from("submissions").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "Accepted").eq("problems.topic" as never, "Graphs"),
+        supabaseBrowser.from("ai_chat_sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabaseBrowser.from("mock_sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("score", 80),
+        supabaseBrowser.from("flashcard_reviews").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      ]);
+
+      const streak = profileRes.data?.streak ?? 0;
+      const solved = solvedRes.count ?? 0;
+      const arrayCount = arrayRes.count ?? 0;
+      const dpCount = dpRes.count ?? 0;
+      const graphCount = graphRes.count ?? 0;
+      const chats = chatRes.count ?? 0;
+      const mockPassCount = mockPassRes.count ?? 0;
+      const flashCount = flashRes.count ?? 0;
+
+      const getProgress = (badgeId: string) => {
+        const map: Record<string, { current: number; target: number }> = {
+          solved_1: { current: solved, target: 1 },
+          solved_10: { current: solved, target: 10 },
+          solved_50: { current: solved, target: 50 },
+          solved_100: { current: solved, target: 100 },
+          master_array: { current: arrayCount, target: 5 },
+          master_dp: { current: dpCount, target: 5 },
+          master_graph: { current: graphCount, target: 5 },
+          streak_7: { current: streak, target: 7 },
+          streak_30: { current: streak, target: 30 },
+          ai_explorer: { current: chats, target: 1 },
+          mock_expert: { current: mockPassCount, target: 1 },
+          flash_champ: { current: flashCount, target: 50 },
+        };
+        return map[badgeId] ?? { current: 0, target: 1 };
+      };
+
+      const achievements = BADGES_LIST.map((badge) => ({
+        ...badge,
+        earned: !!earnedMap[badge.id],
+        earnedAt: earnedMap[badge.id] ?? null,
+        progress: getProgress(badge.id),
+        rarity: badge.xpReward >= 1000 ? "Legendary" : badge.xpReward >= 400 ? "Epic" : badge.xpReward >= 150 ? "Rare" : "Common"
+      }));
+
+      // 2. Fetch Leaderboard
+      const { data: topUsers } = await supabaseBrowser
+        .from("profiles")
+        .select("id, full_name, xp, streak")
+        .order("xp", { ascending: false })
+        .limit(10);
+
+      const userIds = (topUsers ?? []).map(u => u.id);
+      const { data: statusCounts } = await supabaseBrowser
+        .from("user_problem_status")
+        .select("user_id")
+        .in("user_id", userIds)
+        .eq("solved", true);
+
+      const problemsMap: Record<string, number> = {};
+      for (const row of statusCounts ?? []) {
+        problemsMap[row.user_id] = (problemsMap[row.user_id] || 0) + 1;
+      }
+
+      let rank = 1;
+      const leaderboard = (topUsers ?? []).map((u) => ({
+        rank: rank++,
+        id: u.id,
+        name: u.full_name || "Anonymous User",
+        xp: u.xp,
+        streak: u.streak,
+        problems: problemsMap[u.id] || 0,
+        self: u.id === user.id
+      }));
+
+      // 3. Stats (just use profileRes data and achievements length)
+      const stats = {
+        xp: profileRes.data?.xp ?? 0,
+        streak: profileRes.data?.streak ?? 0,
+        badgeCount: Object.keys(earnedMap).length
+      };
+
+      return { achievements, leaderboard, stats };
+    },
+    enabled: !!user,
+  });
+
+  if (dataQuery.isLoading || !dataQuery.data) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Achievements" description="Track your progress. Earn badges. Climb the leaderboard." />
+        <Skeleton className="w-full h-64 rounded-xl" />
+      </div>
+    );
+  }
+
+  const { achievements: badges, leaderboard, stats } = dataQuery.data;
+
+  const earnedBadges = badges.filter((b) => b.earned);
+  
+  // Calculate Level (Level 1 is 0 XP, Level 2 is 100 XP, Level 3 is 400 XP... Level = floor(0.1 * sqrt(XP)) + 1)
+  const currentLevel = Math.floor(0.1 * Math.sqrt(stats.xp)) + 1;
+  const nextLevelXP = Math.pow((currentLevel) / 0.1, 2);
+  const currentLevelXP = Math.pow((currentLevel - 1) / 0.1, 2);
+  const xpIntoLevel = stats.xp - currentLevelXP;
+  const xpNeededForLevel = nextLevelXP - currentLevelXP;
+  const levelProgress = Math.min(100, Math.max(0, (xpIntoLevel / xpNeededForLevel) * 100));
+
+  // Compute milestones (next 3 badges closest to completion)
+  const lockedBadges = badges.filter((b) => !b.earned);
+  const milestones = lockedBadges
+    .map((b) => {
+      const pct = Math.min(100, Math.round((b.progress.current / b.progress.target) * 100));
+      return {
+        label: b.category,
+        name: b.name,
+        progress: pct,
+        left: `${b.progress.target - b.progress.current} more needed`,
+        pctValue: pct
+      };
+    })
+    .sort((a, b) => b.pctValue - a.pctValue)
+    .slice(0, 3);
+
+  // Pad milestones with placeholders if we don't have enough
+  if (milestones.length < 3) {
+    const defaultMilestones = [
+      { label: "Level Up", name: `Reach Level ${currentLevel + 1}`, progress: Math.round(levelProgress), left: `${Math.round(nextLevelXP - stats.xp)} XP needed`, pctValue: 0 },
+      { label: "Maintain Streak", name: "Keep it up!", progress: 100, left: "Log in tomorrow", pctValue: 0 }
+    ];
+    while (milestones.length < 3) {
+      milestones.push(defaultMilestones.shift() ?? { label: "Completed", name: "All Milestones Done!", progress: 100, left: "Great job!", pctValue: 100 });
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader title="Achievements" description="Track your progress. Earn badges. Climb the leaderboard." />
@@ -54,12 +225,12 @@ function Achievements() {
           <div className="absolute inset-0 bg-gradient-mesh opacity-30" />
           <div className="relative p-6">
             <div className="text-xs font-bold uppercase tracking-widest text-primary-foreground/70 mb-2">Total XP</div>
-            <div className="text-5xl font-black text-primary-foreground">12,480</div>
+            <div className="text-5xl font-black text-primary-foreground">{stats.xp.toLocaleString()}</div>
             <div className="mt-4 flex items-center justify-between text-xs text-primary-foreground/70">
-              <span>Level 14</span>
-              <span>2,520 to Level 15</span>
+              <span>Level {currentLevel}</span>
+              <span>{Math.round(nextLevelXP - stats.xp).toLocaleString()} to Level {currentLevel + 1}</span>
             </div>
-            <Progress value={83} className="mt-2 h-2.5 bg-white/20 [&>div]:bg-white" />
+            <Progress value={levelProgress} className="mt-2 h-2.5 bg-white/20 [&>div]:bg-white" />
           </div>
         </Card>
 
@@ -68,24 +239,26 @@ function Achievements() {
           <div className="flex items-center gap-3">
             <Flame className="h-10 w-10 text-amber-500" />
             <div>
-              <div className="text-4xl font-black">42</div>
+              <div className="text-4xl font-black">{stats.streak}</div>
               <div className="text-sm text-muted-foreground">days</div>
             </div>
           </div>
           <div className="mt-4 flex items-center gap-2 text-xs">
             <TrendingUp className="h-3.5 w-3.5 text-emerald-brand" />
-            <span className="text-muted-foreground">Personal best: <strong className="text-foreground">58 days</strong></span>
+            <span className="text-muted-foreground">Keep it up!</span>
           </div>
         </Card>
 
         <Card className="border-border/40 p-6 shadow-soft">
           <div className="text-xs font-bold uppercase tracking-widest text-emerald-brand mb-2">Badges Earned</div>
-          <div className="text-4xl font-black">18<span className="text-lg font-normal text-muted-foreground"> / 42</span></div>
+          <div className="text-4xl font-black">{earnedBadges.length}<span className="text-lg font-normal text-muted-foreground"> / {badges.length}</span></div>
           <div className="mt-4 flex gap-1 flex-wrap">
-            {["🥇", "🥈", "🥉", "⭐", "🔵"].map((e, i) => (
-              <span key={i} className="text-xl">{e}</span>
+            {earnedBadges.slice(0, 5).map((e, i) => (
+              <span key={i} className="text-xl">{e.icon}</span>
             ))}
-            <span className="text-sm text-muted-foreground self-center ml-1">+13 more</span>
+            {earnedBadges.length > 5 && (
+              <span className="text-sm text-muted-foreground self-center ml-1">+{earnedBadges.length - 5} more</span>
+            )}
           </div>
         </Card>
       </div>
@@ -98,9 +271,9 @@ function Achievements() {
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           {milestones.map((m) => (
-            <div key={m.label} className="rounded-2xl border border-border/40 p-4">
+            <div key={m.label + m.name} className="rounded-2xl border border-border/40 p-4">
               <div className="text-xs text-muted-foreground mb-1">{m.label}</div>
-              <div className="font-bold text-sm">{m.name}</div>
+              <div className="font-bold text-sm truncate">{m.name}</div>
               <Progress value={m.progress} className="mt-3 h-2" />
               <div className="mt-1.5 text-xs text-muted-foreground">{m.progress}% · {m.left}</div>
             </div>
@@ -118,14 +291,15 @@ function Achievements() {
           <Card className="border-border/40 p-6 shadow-soft">
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-bold">All badges</h3>
-              <Badge variant="outline">{badges.filter((b) => b.earned).length} / {badges.length} earned</Badge>
+              <Badge variant="outline">{earnedBadges.length} / {badges.length} earned</Badge>
             </div>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
               {badges.map((b) => {
-                const r = rarityConfig[b.rarity];
+                const r = rarityConfig[b.rarity] || rarityConfig.Common;
+                const IconComponent = iconMap[b.icon] || Award;
                 return (
                   <div
-                    key={b.name}
+                    key={b.id}
                     className={`group relative flex flex-col items-center rounded-2xl border p-5 text-center transition-all ${
                       b.earned
                         ? `${r.color} hover:-translate-y-1 hover:shadow-elegant cursor-pointer`
@@ -140,10 +314,16 @@ function Achievements() {
                         b.earned ? "bg-gradient-primary text-primary-foreground shadow-glow" : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      {b.earned ? <b.icon className="h-7 w-7" /> : <Lock className="h-6 w-6" />}
+                      {b.earned ? <IconComponent className="h-7 w-7" /> : <Lock className="h-6 w-6" />}
                     </div>
                     <div className="text-sm font-bold leading-tight">{b.name}</div>
                     <div className="mt-1 text-xs text-muted-foreground">{b.desc}</div>
+                    {!b.earned && b.progress.target > 1 && (
+                      <div className="mt-2 w-full">
+                        <Progress value={(b.progress.current / b.progress.target) * 100} className="h-1.5" />
+                        <div className="text-[9px] text-muted-foreground mt-1">{b.progress.current} / {b.progress.target}</div>
+                      </div>
+                    )}
                     <Badge variant="outline" className={`mt-3 text-[10px] ${r.color}`}>
                       {r.label} {b.rarity}
                     </Badge>
@@ -161,12 +341,12 @@ function Achievements() {
                 <Trophy className="h-5 w-5 text-amber-500" />
                 <h3 className="font-bold">Global leaderboard</h3>
               </div>
-              <Badge variant="outline">Top 1,500 / 50,000</Badge>
+              <Badge variant="outline">Top 10</Badge>
             </div>
             <div className="space-y-2">
               {leaderboard.map((u) => (
                 <div
-                  key={u.rank}
+                  key={u.id}
                   className={`flex items-center gap-4 rounded-2xl p-4 transition-all ${
                     u.self ? "bg-primary/10 ring-1 ring-primary/30 shadow-soft" : "hover:bg-muted/30"
                   }`}

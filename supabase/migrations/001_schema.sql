@@ -169,18 +169,24 @@ create table if not exists public.planner_tasks (
 
 -- ─── YouTube Summaries ────────────────────────────────────────────────────────
 create table if not exists public.yt_summaries (
-  id             uuid primary key default uuid_generate_v4(),
-  user_id        uuid not null references public.profiles(id) on delete cascade,
-  video_id       text not null,
-  title          text not null default '',
-  channel        text not null default '',
-  duration       text not null default '',
-  summary        text not null default '',
-  key_points     text[] not null default '{}',
-  concepts       text[] not null default '{}',
-  tags           text[] not null default '{}',
-  raw_transcript text not null default '',
-  created_at     timestamptz not null default now()
+  id               uuid primary key default uuid_generate_v4(),
+  user_id          uuid not null references public.profiles(id) on delete cascade,
+  video_id         text not null,
+  title            text not null default '',
+  channel          text not null default '',
+  duration         text not null default '',
+  summary          text not null default '',
+  detailed_summary text not null default '',
+  key_points       text[] not null default '{}',
+  concepts         text[] not null default '{}',
+  tags             text[] not null default '{}',
+  formulas         text[] not null default '{}',
+  algorithms       text[] not null default '{}',
+  revision_notes   text not null default '',
+  flashcards       jsonb not null default '[]'::jsonb,
+  quiz_questions   jsonb not null default '[]'::jsonb,
+  raw_transcript   text not null default '',
+  created_at       timestamptz not null default now()
 );
 
 -- ─── Achievements / Badges ────────────────────────────────────────────────────
@@ -273,6 +279,10 @@ begin
   return new;
 end;
 $$;
+
+drop trigger if exists profiles_updated_at  on public.profiles;
+drop trigger if exists notes_updated_at     on public.notes;
+drop trigger if exists ai_chat_sessions_upd on public.ai_chat_sessions;
 
 create trigger profiles_updated_at  before update on public.profiles  for each row execute procedure public.set_updated_at();
 create trigger notes_updated_at     before update on public.notes     for each row execute procedure public.set_updated_at();

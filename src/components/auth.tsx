@@ -572,86 +572,56 @@ export function ForgotPasswordForm() {
 
 /* ─── Verify Email ─────────────────────────────────────────────────────── */
 export function VerifyEmail() {
-  const [values, setValues] = useState(Array(6).fill(""));
-  const inputs = useRef<(HTMLInputElement | null)[]>([]);
-
-  const handleChange = (i: number, val: string) => {
-    if (!/^\d?$/.test(val)) return;
-    const next = [...values];
-    next[i] = val;
-    setValues(next);
-    if (val && i < 5) inputs.current[i + 1]?.focus();
-  };
-
-  const handleKeyDown = (i: number, e: React.KeyboardEvent) => {
-    if (e.key === "Backspace" && !values[i] && i > 0) {
-      inputs.current[i - 1]?.focus();
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent) => {
-    const text = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (text) {
-      setValues([...text.padEnd(6).split("").slice(0, 6)]);
-      inputs.current[Math.min(text.length, 5)]?.focus();
-    }
-    e.preventDefault();
-  };
-
-  const isComplete = values.every((v) => v !== "");
-
   return (
     <AuthShell
-      title="Verify your email 📬"
-      subtitle="We sent a 6-digit code to your inbox. Enter it below to continue."
+      title="Check your inbox 📬"
+      subtitle="We sent a confirmation link to your email address."
       footer={
         <>
-          Didn't get it?{" "}
-          <button className="font-semibold text-primary hover:underline">
-            Resend code
-          </button>
+          Already confirmed?{" "}
+          <Link to="/login" className="font-semibold text-primary hover:underline">
+            Sign in
+          </Link>
         </>
       }
     >
-      <div className="space-y-6">
-        <div className="flex justify-center gap-3" onPaste={handlePaste}>
-          {values.map((v, i) => (
-            <input
-              key={i}
-              id={`otp-${i}`}
-              ref={(el) => { inputs.current[i] = el; }}
-              type="text"
-              inputMode="numeric"
-              maxLength={1}
-              value={v}
-              onChange={(e) => handleChange(i, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(i, e)}
-              className={`h-14 w-12 rounded-xl border text-center text-xl font-bold transition-all outline-none
-                ${v ? "border-primary bg-primary/5 text-primary shadow-glow" : "border-border/60 bg-background"}
-                focus:border-primary focus:ring-2 focus:ring-primary/20`}
-              aria-label={`OTP digit ${i + 1}`}
-            />
-          ))}
+      <div className="space-y-6 text-center">
+        {/* Email icon */}
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 ring-4 ring-primary/20">
+          <Mail className="h-10 w-10 text-primary" />
         </div>
 
-        <Button
-          asChild
-          className={`h-12 w-full rounded-xl font-bold text-base transition-all ${
-            isComplete
-              ? "bg-gradient-primary shadow-elegant hover:scale-[1.02]"
-              : "opacity-60 cursor-not-allowed"
-          }`}
-          disabled={!isComplete}
-        >
-          <Link to="/dashboard" id="verify-submit">
-            {isComplete ? "Verify & continue →" : "Enter all 6 digits"}
-          </Link>
-        </Button>
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Click the <span className="font-semibold text-foreground">confirmation link</span> in
+            your email to activate your account. Check your spam folder if you don't see it.
+          </p>
+        </div>
 
-        <p className="text-xs text-center text-muted-foreground">
-          Code expires in <span className="font-semibold text-foreground">14:32</span>
-        </p>
+        <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-left space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">What happens next</p>
+          <div className="space-y-1.5">
+            {[
+              "Open the email from Supabase / Adaptivly",
+              "Click the confirmation link",
+              "You'll be redirected back to sign in",
+            ].map((step, i) => (
+              <div key={i} className="flex items-center gap-2 text-sm">
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
+                  {i + 1}
+                </div>
+                <span className="text-muted-foreground">{step}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <Button asChild variant="outline" className="h-12 w-full rounded-xl font-semibold">
+          <Link to="/login">Back to sign in →</Link>
+        </Button>
       </div>
     </AuthShell>
   );
 }
+
+

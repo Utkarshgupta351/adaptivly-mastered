@@ -199,6 +199,10 @@ export const reviewCard = createServerFn({ method: "POST" })
       reviewed_at: new Date().toISOString(),
     }, { onConflict: "card_id,user_id" });
 
+    // Check for newly unlocked badges
+    const { checkAndAwardBadges } = await import("./achievements");
+    await checkAndAwardBadges({ data: { token: data.token } });
+
     return { nextReviewAt: nextReview.toISOString(), intervalDays: newInterval };
   });
 
