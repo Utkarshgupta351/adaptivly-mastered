@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Bookmark, Clock, Lightbulb, Play, Send, Building2, Code2, ExternalLink,
   Search, CheckCircle2, Circle, Star, Zap, RotateCw,
@@ -16,7 +16,13 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/componen
 import { useAuth, supabaseBrowser } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_app/practice")({ component: Practice });
+export const Route = createFileRoute("/_app/practice")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    id: search.id ? Number(search.id) : (search.problemId ? Number(search.problemId) : undefined),
+    topic: typeof search.topic === "string" ? search.topic : undefined,
+  }),
+  component: Practice,
+});
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Problem {
@@ -149,6 +155,162 @@ const problemsData: Problem[] = [
       Go: `func trap(height []int) int {\n    if len(height) == 0 { return 0 }\n    l, r := 0, len(height)-1\n    leftMax, rightMax := height[l], height[r]\n    res := 0\n    for l < r {\n        if leftMax <= rightMax {\n            l++\n            if height[l] > leftMax { leftMax = height[l] }\n            res += leftMax - height[l]\n        } else {\n            r--\n            if height[r] > rightMax { rightMax = height[r] }\n            res += rightMax - height[r]\n        }\n    }\n    return res\n}`,
     },
   },
+  {
+    id: 5, title: "Maximum Subarray", diff: "Medium", topic: "Dynamic Programming", tags: ["Amazon", "Apple", "Microsoft"],
+    acc: 77, solved: false, starred: false,
+    leetcode: "https://leetcode.com/problems/maximum-subarray/",
+    neetcode: "https://neetcode.io/problems/maximum-subarray",
+    xp: 100,
+    description: "Given an integer array `nums`, find the subarray with the largest sum, and return its sum (Kadane's Algorithm).",
+    examples: [
+      { input: "nums = [-2,1,-3,4,-1,2,1,-5,4]", output: "6", explanation: "[4,-1,2,1] has the largest sum 6." }
+    ],
+    constraints: ["1 <= nums.length <= 10⁵"],
+    starterCode: {
+      Python: `class Solution:\n    def maxSubArray(self, nums: List[int]) -> int:\n        pass`,
+      JavaScript: `var maxSubArray = function(nums) {\n};`,
+      Java: `class Solution {\n    public int maxSubArray(int[] nums) {\n        return 0;\n    }\n}`,
+      "C++": `class Solution {\npublic:\n    int maxSubArray(vector<int>& nums) {\n        return 0;\n    }\n};`,
+      Go: `func maxSubArray(nums []int) int {\n    return 0\n}`,
+    },
+    solutionCode: {
+      Python: `class Solution:\n    def maxSubArray(self, nums: List[int]) -> int:\n        max_sum = cur = nums[0]\n        for n in nums[1:]:\n            cur = max(n, cur + n)\n            max_sum = max(max_sum, cur)\n        return max_sum`,
+      JavaScript: `var maxSubArray = function(nums) {\n    let max = nums[0], cur = nums[0];\n    for (let i = 1; i < nums.length; i++) {\n        cur = Math.max(nums[i], cur + nums[i]);\n        max = Math.max(max, cur);\n    }\n    return max;\n};`,
+      Java: `class Solution {\n    public int maxSubArray(int[] nums) {\n        int max = nums[0], cur = nums[0];\n        for (int i = 1; i < nums.length; i++) {\n            cur = Math.max(nums[i], cur + nums[i]);\n            max = Math.max(max, cur);\n        }\n        return max;\n    }\n}`,
+      "C++": `class Solution {\npublic:\n    int maxSubArray(vector<int>& nums) {\n        int mx = nums[0], cur = nums[0];\n        for (int i = 1; i < nums.size(); i++) { cur = max(nums[i], cur + nums[i]); mx = max(mx, cur); }\n        return mx;\n    }\n};`,
+      Go: `func maxSubArray(nums []int) int {\n    mx, cur := nums[0], nums[0]\n    for _, n := range nums[1:] {\n        if cur+n > n { cur = cur+n } else { cur = n }\n        if cur > mx { mx = cur }\n    }\n    return mx\n}`,
+    },
+  },
+  {
+    id: 6, title: "Best Time to Buy and Sell Stock", diff: "Easy", topic: "Arrays", tags: ["Amazon", "Facebook"],
+    acc: 83, solved: false, starred: false,
+    leetcode: "https://leetcode.com/problems/best-time-to-buy-and-sell-stock/",
+    neetcode: "https://neetcode.io/problems/buy-and-sell-crypto",
+    xp: 50,
+    description: "Given an array `prices` where `prices[i]` is the price of a given stock on day `i`, return the maximum profit you can achieve.",
+    examples: [
+      { input: "prices = [7,1,5,3,6,4]", output: "5", explanation: "Buy day 2 (1) and sell day 5 (6), profit = 5." }
+    ],
+    constraints: ["1 <= prices.length <= 10⁵"],
+    starterCode: {
+      Python: `class Solution:\n    def maxProfit(self, prices: List[int]) -> int:\n        pass`,
+      JavaScript: `var maxProfit = function(prices) {\n};`,
+      Java: `class Solution {\n    public int maxProfit(int[] prices) {\n        return 0;\n    }\n}`,
+      "C++": `class Solution {\npublic:\n    int maxProfit(vector<int>& prices) {\n        return 0;\n    }\n};`,
+      Go: `func maxProfit(prices []int) int {\n    return 0\n}`,
+    },
+    solutionCode: {
+      Python: `class Solution:\n    def maxProfit(self, prices: List[int]) -> int:\n        min_p, max_p = float('inf'), 0\n        for p in prices:\n            min_p = min(min_p, p)\n            max_p = max(max_p, p - min_p)\n        return max_p`,
+      JavaScript: `var maxProfit = function(prices) {\n    let min = Infinity, max = 0;\n    for (const p of prices) { min = Math.min(min, p); max = Math.max(max, p - min); }\n    return max;\n};`,
+      Java: `class Solution {\n    public int maxProfit(int[] prices) {\n        int min = Integer.MAX_VALUE, max = 0;\n        for (int p : prices) { min = Math.min(min, p); max = Math.max(max, p - min); }\n        return max;\n    }\n}`,
+      "C++": `class Solution {\npublic:\n    int maxProfit(vector<int>& prices) {\n        int mn = INT_MAX, mx = 0;\n        for (int p : prices) { mn = min(mn, p); mx = max(mx, p - mn); }\n        return mx;\n    }\n};`,
+      Go: `func maxProfit(prices []int) int {\n    mn, mx := 1<<31, 0\n    for _, p := range prices { if p < mn { mn = p }; if p - mn > mx { mx = p - mn } }\n    return mx\n}`,
+    },
+  },
+  {
+    id: 7, title: "Climbing Stairs", diff: "Easy", topic: "Dynamic Programming", tags: ["Amazon", "Google"],
+    acc: 87, solved: false, starred: false,
+    leetcode: "https://leetcode.com/problems/climbing-stairs/",
+    neetcode: "https://neetcode.io/problems/climbing-stairs",
+    xp: 50,
+    description: "You are climbing a staircase with `n` steps. Each time you can climb 1 or 2 steps. In how many distinct ways can you climb to the top?",
+    examples: [
+      { input: "n = 3", output: "3", explanation: "1+1+1, 1+2, or 2+1." }
+    ],
+    constraints: ["1 <= n <= 45"],
+    starterCode: {
+      Python: `class Solution:\n    def climbStairs(self, n: int) -> int:\n        pass`,
+      JavaScript: `var climbStairs = function(n) {\n};`,
+      Java: `class Solution {\n    public int climbStairs(int n) {\n        return 0;\n    }\n}`,
+      "C++": `class Solution {\npublic:\n    int climbStairs(int n) {\n        return 0;\n    }\n};`,
+      Go: `func climbStairs(n int) int {\n    return 0\n}`,
+    },
+    solutionCode: {
+      Python: `class Solution:\n    def climbStairs(self, n: int) -> int:\n        if n <= 2: return n\n        a, b = 1, 2\n        for _ in range(2, n): a, b = b, a + b\n        return b`,
+      JavaScript: `var climbStairs = function(n) {\n    if (n <= 2) return n;\n    let a = 1, b = 2;\n    for (let i = 2; i < n; i++) [a, b] = [b, a + b];\n    return b;\n};`,
+      Java: `class Solution {\n    public int climbStairs(int n) {\n        if (n <= 2) return n;\n        int a = 1, b = 2;\n        for (int i = 2; i < n; i++) { int t = a + b; a = b; b = t; }\n        return b;\n    }\n}`,
+      "C++": `class Solution {\npublic:\n    int climbStairs(int n) {\n        if (n <= 2) return n;\n        int a = 1, b = 2;\n        for (int i = 2; i < n; i++) { int t = a + b; a = b; b = t; }\n        return b;\n    }\n};`,
+      Go: `func climbStairs(n int) int {\n    if n <= 2 { return n }\n    a, b := 1, 2\n    for i := 2; i < n; i++ { a, b = b, a + b }\n    return b\n}`,
+    },
+  },
+  {
+    id: 8, title: "Merge Two Sorted Lists", diff: "Easy", topic: "Linked Lists", tags: ["Amazon", "Microsoft"],
+    acc: 90, solved: false, starred: false,
+    leetcode: "https://leetcode.com/problems/merge-two-sorted-lists/",
+    neetcode: "https://neetcode.io/problems/merge-two-sorted-linked-lists",
+    xp: 50,
+    description: "Merge two sorted linked lists and return the head of the merged list.",
+    examples: [
+      { input: "list1 = [1,2,4], list2 = [1,3,4]", output: "[1,1,2,3,4,4]", explanation: "Merged in non-decreasing order." }
+    ],
+    constraints: ["0 <= nodes <= 50"],
+    starterCode: {
+      Python: `class Solution:\n    def mergeTwoLists(self, l1, l2):\n        pass`,
+      JavaScript: `var mergeTwoLists = function(l1, l2) {\n};`,
+      Java: `class Solution {\n    public ListNode mergeTwoLists(ListNode l1, ListNode l2) {\n        return null;\n    }\n}`,
+      "C++": `class Solution {\npublic:\n    ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {\n        return nullptr;\n    }\n};`,
+      Go: `func mergeTwoLists(l1 *ListNode, l2 *ListNode) *ListNode {\n    return nil\n}`,
+    },
+    solutionCode: {
+      Python: `class Solution:\n    def mergeTwoLists(self, l1, l2):\n        dummy = ListNode(); cur = dummy\n        while l1 and l2:\n            if l1.val <= l2.val: cur.next = l1; l1 = l1.next\n            else: cur.next = l2; l2 = l2.next\n            cur = cur.next\n        cur.next = l1 or l2\n        return dummy.next`,
+      JavaScript: `var mergeTwoLists = function(l1, l2) {\n    const dummy = new ListNode(); let cur = dummy;\n    while (l1 && l2) {\n        if (l1.val <= l2.val) { cur.next = l1; l1 = l1.next; }\n        else { cur.next = l2; l2 = l2.next; }\n        cur = cur.next;\n    }\n    cur.next = l1 ?? l2; return dummy.next;\n};`,
+      Java: `class Solution {\n    public ListNode mergeTwoLists(ListNode l1, ListNode l2) {\n        ListNode dummy = new ListNode(), cur = dummy;\n        while (l1 != null && l2 != null) {\n            if (l1.val <= l2.val) { cur.next = l1; l1 = l1.next; }\n            else { cur.next = l2; l2 = l2.next; }\n            cur = cur.next;\n        }\n        cur.next = (l1 != null) ? l1 : l2; return dummy.next;\n    }\n}`,
+      "C++": `class Solution {\npublic:\n    ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {\n        ListNode dummy, *cur = &dummy;\n        while (l1 && l2) {\n            if (l1->val <= l2->val) { cur->next = l1; l1 = l1->next; }\n            else { cur->next = l2; l2 = l2->next; }\n            cur = cur->next;\n        }\n        cur->next = l1 ? l1 : l2; return dummy.next;\n    }\n};`,
+      Go: `func mergeTwoLists(l1 *ListNode, l2 *ListNode) *ListNode {\n    dummy := &ListNode{}; cur := dummy\n    for l1 != nil && l2 != nil {\n        if l1.Val <= l2.Val { cur.Next = l1; l1 = l1.Next } else { cur.Next = l2; l2 = l2.Next }\n        cur = cur.Next\n    }\n    if l1 != nil { cur.Next = l1 } else { cur.Next = l2 }\n    return dummy.Next\n}`,
+    },
+  },
+  {
+    id: 9, title: "Valid Parentheses", diff: "Easy", topic: "Stacks", tags: ["Amazon", "Google", "Facebook"],
+    acc: 80, solved: false, starred: false,
+    leetcode: "https://leetcode.com/problems/valid-parentheses/",
+    neetcode: "https://neetcode.io/problems/validate-parentheses",
+    xp: 50,
+    description: "Given a string `s` containing just the characters `(`, `)`, `{`, `}`, `[` and `]`, determine if the input string is valid.",
+    examples: [
+      { input: 's = "()[]{}"', output: "true", explanation: "Matching brackets closed in correct order." }
+    ],
+    constraints: ["1 <= s.length <= 10⁴"],
+    starterCode: {
+      Python: `class Solution:\n    def isValid(self, s: str) -> bool:\n        pass`,
+      JavaScript: `var isValid = function(s) {\n};`,
+      Java: `class Solution {\n    public boolean isValid(String s) {\n        return false;\n    }\n}`,
+      "C++": `class Solution {\npublic:\n    bool isValid(string s) {\n        return false;\n    }\n};`,
+      Go: `func isValid(s string) bool {\n    return false\n}`,
+    },
+    solutionCode: {
+      Python: `class Solution:\n    def isValid(self, s: str) -> bool:\n        stack = []\n        mapping = {')': '(', ']': '[', '}': '{'}\n        for c in s:\n            if c in mapping:\n                if not stack or stack[-1] != mapping[c]: return False\n                stack.pop()\n            else: stack.append(c)\n        return not stack`,
+      JavaScript: `var isValid = function(s) {\n    const stack = []; const m = {')':'(', ']':'[', '}':'{'};\n    for (const c of s) {\n        if (c in m) { if (stack.pop() !== m[c]) return false; }\n        else stack.push(c);\n    }\n    return !stack.length;\n};`,
+      Java: `class Solution {\n    public boolean isValid(String s) {\n        Deque<Character> stack = new ArrayDeque<>();\n        for (char c : s.toCharArray()) {\n            if (c == ')') { if (stack.isEmpty() || stack.pop() != '(') return false; }\n            else if (c == ']') { if (stack.isEmpty() || stack.pop() != '[') return false; }\n            else if (c == '}') { if (stack.isEmpty() || stack.pop() != '{') return false; }\n            else stack.push(c);\n        }\n        return stack.isEmpty();\n    }\n}`,
+      "C++": `class Solution {\npublic:\n    bool isValid(string s) {\n        stack<char> st;\n        for (char c : s) {\n            if (c == ')') { if (st.empty() || st.top() != '(') return false; st.pop(); }\n            else if (c == ']') { if (st.empty() || st.top() != '[') return false; st.pop(); }\n            else if (c == '}') { if (st.empty() || st.top() != '{') return false; st.pop(); }\n            else st.push(c);\n        }\n        return st.empty();\n    }\n};`,
+      Go: `func isValid(s string) bool {\n    stack := []rune{}\n    for _, c := range s {\n        switch c {\n        case '(', '[', '{': stack = append(stack, c)\n        case ')': if len(stack)==0 || stack[len(stack)-1]!='(' { return false }; stack = stack[:len(stack)-1]\n        case ']': if len(stack)==0 || stack[len(stack)-1]!='[' { return false }; stack = stack[:len(stack)-1]\n        case '}': if len(stack)==0 || stack[len(stack)-1]!='{' { return false }; stack = stack[:len(stack)-1]\n        }\n    }\n    return len(stack) == 0\n}`,
+    },
+  },
+  {
+    id: 10, title: "Number of Islands", diff: "Medium", topic: "Graphs", tags: ["Amazon", "Google"],
+    acc: 72, solved: false, starred: false,
+    leetcode: "https://leetcode.com/problems/number-of-islands/",
+    neetcode: "https://neetcode.io/problems/count-number-of-islands",
+    xp: 100,
+    description: "Given an `m x n` 2D grid of `1`s (land) and `0`s (water), return the number of islands.",
+    examples: [
+      { input: 'grid = [["1","1","0"],["0","1","0"]]', output: "1", explanation: "1 island." }
+    ],
+    constraints: ["1 <= m, n <= 300"],
+    starterCode: {
+      Python: `class Solution:\n    def numIslands(self, grid: List[List[str]]) -> int:\n        pass`,
+      JavaScript: `var numIslands = function(grid) {\n};`,
+      Java: `class Solution {\n    public int numIslands(char[][] grid) {\n        return 0;\n    }\n}`,
+      "C++": `class Solution {\npublic:\n    int numIslands(vector<vector<char>>& grid) {\n        return 0;\n    }\n};`,
+      Go: `func numIslands(grid [][]byte) int {\n    return 0\n}`,
+    },
+    solutionCode: {
+      Python: `class Solution:\n    def numIslands(self, grid: List[List[str]]) -> int:\n        count = 0\n        def dfs(r, c):\n            if r < 0 or r >= len(grid) or c < 0 or c >= len(grid[0]) or grid[r][c] != '1': return\n            grid[r][c] = '0'\n            for dr, dc in [(0,1), (0,-1), (1,0), (-1,0)]: dfs(r + dr, c + dc)\n        for r in range(len(grid)):\n            for c in range(len(grid[0])):\n                if grid[r][c] == '1': count += 1; dfs(r, c)\n        return count`,
+      JavaScript: `var numIslands = function(grid) {\n    let count = 0;\n    const dfs = (r, c) => {\n        if (r < 0 || r >= grid.length || c < 0 || c >= grid[0].length || grid[r][c] !== '1') return;\n        grid[r][c] = '0';\n        [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dr, dc]) => dfs(r + dr, c + dc));\n    };\n    for (let r = 0; r < grid.length; r++)\n        for (let c = 0; c < grid[0].length; c++)\n            if (grid[r][c] === '1') { count++; dfs(r, c); }\n    return count;\n};`,
+      Java: `class Solution {\n    public int numIslands(char[][] g) {\n        int count = 0;\n        for (int r = 0; r < g.length; r++)\n            for (int c = 0; c < g[0].length; c++)\n                if (g[r][c] == '1') { count++; dfs(g, r, c); }\n        return count;\n    }\n    void dfs(char[][] g, int r, int c) {\n        if (r < 0 || r >= g.length || c < 0 || c >= g[0].length || g[r][c] != '1') return;\n        g[r][c] = '0';\n        dfs(g, r + 1, c); dfs(g, r - 1, c); dfs(g, r, c + 1); dfs(g, r, c - 1);\n    }\n}`,
+      "C++": `class Solution {\npublic:\n    int numIslands(vector<vector<char>>& g) {\n        int count = 0;\n        for (int r = 0; r < g.size(); r++)\n            for (int c = 0; c < g[0].size(); c++)\n                if (g[r][c] == '1') { count++; dfs(g, r, c); }\n        return count;\n    }\n    void dfs(vector<vector<char>>& g, int r, int c) {\n        if (r < 0 || r >= (int)g.size() || c < 0 || c >= (int)g[0].size() || g[r][c] != '1') return;\n        g[r][c] = '0';\n        dfs(g, r + 1, c); dfs(g, r - 1, c); dfs(g, r, c + 1); dfs(g, r, c - 1);\n    }\n};`,
+      Go: `func numIslands(grid [][]byte) int {\n    count := 0\n    var dfs func(r, c int)\n    dfs = func(r, c int) {\n        if r < 0 || r >= len(grid) || c < 0 || c >= len(grid[0]) || grid[r][c] != '1' { return }\n        grid[r][c] = '0'\n        dfs(r + 1, c); dfs(r - 1, c); dfs(r, c + 1); dfs(r, c - 1)\n    }\n    for r := range grid { for c := range grid[0] { if grid[r][c] == '1' { count++; dfs(r, c) } } }\n    return count\n}`,
+    },
+  },
 ];
 
 const diffColors: Record<string, string> = {
@@ -180,6 +342,8 @@ type TestCaseResult = {
 /* ─── Practice Page Component ───────────────────────────────────────────── */
 function Practice() {
   const { user } = useAuth();
+  const search = Route.useSearch();
+  const navigate = useNavigate();
 
   // Layout & sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -188,6 +352,30 @@ function Practice() {
   const [query, setQuery] = useState("");
   const [diffFilter, setDiffFilter] = useState("All");
   const [topicFilter, setTopicFilter] = useState("All");
+
+  // Sync search parameter with active problem index and topic filter
+  useEffect(() => {
+    if (search.id) {
+      const foundIdx = problemsData.findIndex((p) => p.id === search.id);
+      if (foundIdx !== -1) {
+        setActiveIdx(foundIdx);
+      }
+    } else if (search.topic) {
+      setTopicFilter(search.topic);
+      const foundIdx = problemsData.findIndex((p) => p.topic.toLowerCase().includes(search.topic!.toLowerCase()));
+      if (foundIdx !== -1) {
+        setActiveIdx(foundIdx);
+      }
+    }
+  }, [search.id, search.topic]);
+
+  const selectProblem = useCallback((idx: number) => {
+    setActiveIdx(idx);
+    const prob = problemsData[idx];
+    if (prob) {
+      navigate({ to: "/practice", search: { id: prob.id } });
+    }
+  }, [navigate]);
 
   const sidebarRef = useRef<{ collapse: () => void; expand: () => void; isCollapsed: () => boolean } | null>(null);
 
@@ -440,7 +628,7 @@ function Practice() {
                     <button
                       key={p.id}
                       onClick={() => {
-                        setActiveIdx(origIdx);
+                        selectProblem(origIdx);
                         resetTimer();
                       }}
                       className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition-all border-b border-border/20 last:border-0 ${
