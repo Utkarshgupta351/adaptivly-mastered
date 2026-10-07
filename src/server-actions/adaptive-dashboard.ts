@@ -150,7 +150,7 @@ export const getAdaptiveRecommendations = createServerFn({ method: "GET" })
       todaysQuiz: {
         topic: weakestTopic,
         questionCount: 5,
-        path: `/practice`
+        path: `/practice?topic=${encodeURIComponent(weakestTopic)}`
       },
       weakTopics: weakList.filter(t => t.score < 60),
       suggestedVideos: SUGGESTED_VIDEOS[weakestTopic] || SUGGESTED_VIDEOS["DSA"],
