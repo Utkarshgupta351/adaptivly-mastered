@@ -48,8 +48,8 @@ const ALL_SUBJECTS: SubjectDetail[] = [
     modules: [
       { id: "dsa-1", title: "Arrays & Hashing", description: "Array traversal, hash tables, and frequency counts.", keyTopics: ["Two Sum", "Valid Anagram", "Contains Duplicate"], problemId: 1 },
       { id: "dsa-2", title: "Two Pointers & Sliding Window", description: "Optimizing space and time complexity using pointers.", keyTopics: ["Trapping Rain Water", "Container With Most Water"], problemId: 4 },
-      { id: "dsa-3", title: "Linked Lists & Stacks", description: "Singly/doubly linked lists, stack operations, and recursion.", keyTopics: ["Merge Two Sorted Lists", "Valid Parentheses"], problemId: 7 },
-      { id: "dsa-4", title: "Dynamic Programming", description: "Memoization, tabulation, and optimal substructure.", keyTopics: ["Climbing Stairs", "Maximum Subarray", "Coin Change"], problemId: 6 },
+      { id: "dsa-3", title: "Linked Lists & Stacks", description: "Singly/doubly linked lists, stack operations, and recursion.", keyTopics: ["Merge Two Sorted Lists", "Valid Parentheses"], problemId: 8 },
+      { id: "dsa-4", title: "Dynamic Programming", description: "Memoization, tabulation, and optimal substructure.", keyTopics: ["Climbing Stairs", "Maximum Subarray", "Coin Change"], problemId: 5 },
       { id: "dsa-5", title: "Trees & Graphs", description: "BFS, DFS, tree traversals, shortest path, and island connectivity.", keyTopics: ["Number of Islands", "Tree Traversal"], problemId: 10 },
     ],
   },
@@ -63,9 +63,10 @@ const ALL_SUBJECTS: SubjectDetail[] = [
     paths: ["FAANG Full Prep"],
     description: "Understand process scheduling, concurrency, deadlocks, virtual memory, and system calls.",
     modules: [
-      { id: "os-1", title: "Processes & Threads", description: "Process states, context switching, CPU scheduling algorithms.", keyTopics: ["Process State Transitions", "Round Robin Scheduling"] },
-      { id: "os-2", title: "Concurrency & Synchronization", description: "Mutexes, semaphores, race conditions, and Producer-Consumer problem.", keyTopics: ["Producer-Consumer Problem", "Dining Philosophers"] },
-      { id: "os-3", title: "Memory Management", description: "Paging, segmentation, TLB, page replacement algorithms.", keyTopics: ["LRU Cache Page Replacement", "Virtual Memory"] },
+      { id: "os-1", title: "Processes & Thread Management", description: "Process states, context switching, CPU scheduling algorithms.", keyTopics: ["Process Transitions", "Round Robin"], problemId: 17 },
+      { id: "os-2", title: "Concurrency & Synchronization", description: "Mutexes, semaphores, race conditions, and Producer-Consumer problem.", keyTopics: ["Producer-Consumer", "Semaphores"], problemId: 18 },
+      { id: "os-3", title: "Memory Management & Paging", description: "Paging, segmentation, TLB, and page replacement algorithms.", keyTopics: ["LRU Page Replacement", "Virtual Memory"], problemId: 17 },
+      { id: "os-4", title: "Storage & File Systems", description: "Disk scheduling, inodes, file allocation tables, and I/O management.", keyTopics: ["Inodes", "Disk Scheduling"], problemId: 18 },
     ],
   },
   {
@@ -78,9 +79,10 @@ const ALL_SUBJECTS: SubjectDetail[] = [
     paths: ["FAANG Full Prep", "System Design Pro", "Full Stack Dev"],
     description: "Learn relational database design, SQL optimization, ACID transactions, and indexing.",
     modules: [
-      { id: "db-1", title: "SQL & Query Optimization", description: "Complex joins, aggregations, window functions, and indexing.", keyTopics: ["SQL Joins & Grouping", "B-Tree Indexing"] },
-      { id: "db-2", title: "Transactions & ACID", description: "Isolation levels, locks, MVCC, and crash recovery.", keyTopics: ["ACID Guarantees", "Write-Ahead Logging"] },
-      { id: "db-3", title: "NoSQL & Distributed DBs", description: "Document stores, Key-Value stores, CAP theorem, and sharding.", keyTopics: ["Sharding Strategies", "Consistent Hashing"] },
+      { id: "db-1", title: "SQL & Query Optimization", description: "Complex joins, aggregations, window functions, and indexing.", keyTopics: ["SQL Joins & Grouping", "B-Tree Indexing"], problemId: 19 },
+      { id: "db-2", title: "Transactions & ACID Guarantees", description: "Isolation levels, locks, MVCC, and crash recovery.", keyTopics: ["ACID Guarantees", "Write-Ahead Logging"], problemId: 20 },
+      { id: "db-3", title: "Relational Schema Normalization", description: "1NF, 2NF, 3NF, BCNF, primary keys, and foreign keys.", keyTopics: ["Database Normalization", "ER Modeling"], problemId: 19 },
+      { id: "db-4", title: "NoSQL & Distributed DBs", description: "Document stores, Key-Value stores, CAP theorem, and sharding.", keyTopics: ["Sharding Strategies", "Consistent Hashing"], problemId: 20 },
     ],
   },
   {
@@ -93,8 +95,9 @@ const ALL_SUBJECTS: SubjectDetail[] = [
     paths: ["FAANG Full Prep"],
     description: "Explore TCP/IP stack, HTTP protocols, DNS resolution, sockets, and network security.",
     modules: [
-      { id: "net-1", title: "OSI Model & TCP/IP", description: "Layer breakdown, packet encapsulation, and routing protocols.", keyTopics: ["3-Way Handshake", "TCP vs UDP"] },
-      { id: "net-2", title: "Application Protocols (HTTP/DNS)", description: "HTTP/1.1 vs HTTP/2 vs HTTP/3, DNS lookup flow, TLS handshake.", keyTopics: ["HTTPS TLS Handshake", "DNS Hierarchy"] },
+      { id: "net-1", title: "OSI Model & TCP/IP Stack", description: "Layer breakdown, packet encapsulation, and routing protocols.", keyTopics: ["3-Way Handshake", "TCP vs UDP"], problemId: 21 },
+      { id: "net-2", title: "Application Protocols & HTTP", description: "HTTP/1.1 vs HTTP/2 vs HTTP/3, RESTful APIs, DNS lookup flow.", keyTopics: ["HTTPS TLS Handshake", "DNS Hierarchy"], problemId: 21 },
+      { id: "net-3", title: "Socket Programming & Security", description: "Socket communication, SSL/TLS, firewalls, and proxy servers.", keyTopics: ["Socket API", "TLS Encryption"], problemId: 21 },
     ],
   },
   {
@@ -107,8 +110,9 @@ const ALL_SUBJECTS: SubjectDetail[] = [
     paths: ["FAANG Full Prep", "DSA Intensive"],
     description: "Master Object-Oriented Design principles (SOLID), Design Patterns, and Low Level Design.",
     modules: [
-      { id: "oop-1", title: "SOLID Principles & Core OOP", description: "Abstraction, Encapsulation, Inheritance, Polymorphism.", keyTopics: ["SOLID Principles", "Class Diagrams"] },
-      { id: "oop-2", title: "Design Patterns", description: "Singleton, Factory, Observer, Strategy, Decorator patterns.", keyTopics: ["Factory Pattern", "Observer Pattern"] },
+      { id: "oop-1", title: "SOLID Principles & Core OOP", description: "Abstraction, Encapsulation, Inheritance, Polymorphism.", keyTopics: ["SOLID Principles", "Class Diagrams"], problemId: 22 },
+      { id: "oop-2", title: "Design Patterns (Creational & Structural)", description: "Singleton, Factory, Builder, Adapter, Decorator patterns.", keyTopics: ["Factory Pattern", "Decorator Pattern"], problemId: 22 },
+      { id: "oop-3", title: "Low Level Design Case Studies", description: "Designing Parking Lot, Elevator System, and Vending Machine.", keyTopics: ["Parking Lot Design", "State Pattern"], problemId: 22 },
     ],
   },
   {
@@ -121,8 +125,9 @@ const ALL_SUBJECTS: SubjectDetail[] = [
     paths: ["Full Stack Dev"],
     description: "Agile methodologies, CI/CD pipelines, Git workflows, testing strategies, and refactoring.",
     modules: [
-      { id: "se-1", title: "Git & Version Control", description: "Branching strategies, merging, rebasing, git bisect.", keyTopics: ["Git Rebase vs Merge", "Conventional Commits"] },
-      { id: "se-2", title: "Testing & CI/CD", description: "Unit testing, integration testing, GitHub Actions, automated builds.", keyTopics: ["TDD Practices", "Pipeline Configuration"] },
+      { id: "se-1", title: "Git & Version Control Workflows", description: "Branching strategies, merging, rebasing, git bisect.", keyTopics: ["Git Rebase vs Merge", "Conventional Commits"], problemId: 23 },
+      { id: "se-2", title: "Testing & CI/CD Automation", description: "Unit testing, integration testing, GitHub Actions, automated builds.", keyTopics: ["TDD Practices", "Pipeline Configuration"], problemId: 23 },
+      { id: "se-3", title: "Agile Software Lifecycle", description: "Scrum ceremonies, user stories, sprint planning, and code reviews.", keyTopics: ["Agile Scrum", "Code Review Best Practices"], problemId: 23 },
     ],
   },
   {
@@ -135,8 +140,10 @@ const ALL_SUBJECTS: SubjectDetail[] = [
     paths: ["FAANG Full Prep", "System Design Pro"],
     description: "Design high-scale, distributed systems including load balancers, caches, queues, and storage.",
     modules: [
-      { id: "sd-1", title: "Scalability & Load Balancing", description: "Horizontal vs vertical scaling, round-robin, least connections, CDN.", keyTopics: ["Load Balancer Algorithms", "CDN Edge Caching"] },
-      { id: "sd-2", title: "Caching & Message Queues", description: "Redis, Memcached, Kafka, RabbitMQ, cache invalidation.", keyTopics: ["Cache-Aside Pattern", "Pub/Sub Queues"] },
+      { id: "sd-1", title: "Scalability & Load Balancing", description: "Horizontal vs vertical scaling, round-robin, least connections, CDN.", keyTopics: ["Rate Limiting", "Consistent Hashing"], problemId: 11 },
+      { id: "sd-2", title: "Distributed Caching & Storage", description: "Redis, Memcached, Kafka, RabbitMQ, cache invalidation.", keyTopics: ["Cache-Aside Pattern", "Pub/Sub Queues"], problemId: 12 },
+      { id: "sd-3", title: "High Availability & Consensus", description: "Raft, Paxos, leader election, heartbeats, and fault tolerance.", keyTopics: ["Consensus Algorithms", "Leader Election"], problemId: 11 },
+      { id: "sd-4", title: "Microservices Architecture", description: "API Gateways, service mesh, circuit breaker, distributed tracing.", keyTopics: ["Circuit Breaker", "Service Discovery"], problemId: 12 },
     ],
   },
   {
@@ -149,8 +156,10 @@ const ALL_SUBJECTS: SubjectDetail[] = [
     paths: ["Full Stack Dev"],
     description: "Modern web architecture, React, Node.js, RESTful APIs, state management, and SSR.",
     modules: [
-      { id: "web-1", title: "Frontend Frameworks & State", description: "React Virtual DOM, hooks, state management, routing.", keyTopics: ["React 19 Hooks", "SSR & Hydration"] },
-      { id: "web-2", title: "REST & GraphQL APIs", description: "API design, authentication (JWT/OAuth), CORS, rate limiting.", keyTopics: ["REST Best Practices", "JWT Auth Flow"] },
+      { id: "web-1", title: "Frontend Frameworks & State Management", description: "React Virtual DOM, hooks, state management, routing.", keyTopics: ["React 19 Hooks", "SSR & Hydration"], problemId: 14 },
+      { id: "web-2", title: "REST & GraphQL API Engineering", description: "API design, authentication (JWT/OAuth), CORS, rate limiting.", keyTopics: ["REST Best Practices", "JWT Auth Flow"], problemId: 13 },
+      { id: "web-3", title: "Backend Services & Databases", description: "Node.js runtime, Express/Nitro, ORMs, PostgreSQL integration.", keyTopics: ["Express Server", "Database Pooling"], problemId: 13 },
+      { id: "web-4", title: "Web Performance & Security", description: "XSS, CSRF, CSP headers, bundle optimization, web vitals.", keyTopics: ["Security Headers", "Bundle Splitting"], problemId: 14 },
     ],
   },
   {
@@ -163,8 +172,10 @@ const ALL_SUBJECTS: SubjectDetail[] = [
     paths: ["AI/ML Engineer"],
     description: "Machine learning fundamentals, neural networks, LLM fine-tuning, and prompt engineering.",
     modules: [
-      { id: "ml-1", title: "ML Foundations & Regression", description: "Supervised/unsupervised learning, gradient descent, evaluation metrics.", keyTopics: ["Gradient Descent", "Precision & Recall"] },
-      { id: "ml-2", title: "Deep Learning & LLMs", description: "Transformers, attention mechanisms, embeddings, RAG pipeline.", keyTopics: ["Attention Mechanism", "RAG Systems"] },
+      { id: "ml-1", title: "ML Foundations & Linear Models", description: "Supervised/unsupervised learning, gradient descent, evaluation metrics.", keyTopics: ["Gradient Descent", "MSE Loss"], problemId: 15 },
+      { id: "ml-2", title: "Deep Learning & Neural Networks", description: "Backpropagation, activation functions, CNNs, RNNs.", keyTopics: ["Neural Nets", "Backpropagation"], problemId: 15 },
+      { id: "ml-3", title: "Transformers & LLM Architectures", description: "Self-attention mechanism, transformer encoders/decoders, embeddings.", keyTopics: ["Self-Attention", "Transformer Architecture"], problemId: 16 },
+      { id: "ml-4", title: "RAG & Vector Search Systems", description: "Vector databases, similarity search, prompt engineering, RAG pipelines.", keyTopics: ["RAG Systems", "Vector Embeddings"], problemId: 16 },
     ],
   },
 ];
