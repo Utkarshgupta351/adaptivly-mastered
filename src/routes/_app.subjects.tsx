@@ -333,7 +333,7 @@ function Subjects() {
 
       {/* Subject Detail Modal */}
       {selectedSubject && (
-        <Dialog open={!!selectedSubject} onOpenChange={(open) => if (!open) setSelectedSubject(null)}>
+        <Dialog open={!!selectedSubject} onOpenChange={(open) => { if (!open) setSelectedSubject(null); }}>
           <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl border-border/40 p-6">
             <DialogHeader className="space-y-2">
               <div className="flex items-center gap-3">
