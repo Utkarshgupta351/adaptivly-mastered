@@ -19,6 +19,11 @@ create table if not exists public.profiles (
   longest_streak   integer not null default 0,
   last_active_date date,
   daily_goal       integer not null default 5,       -- problems per day goal
+  learning_path    text default 'FAANG Full Prep',
+  onboarding_done  boolean not null default false,
+  target_role      text default '',
+  target_company   text default '',
+  last_study_date  date,
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now()
 );

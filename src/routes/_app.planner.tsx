@@ -35,6 +35,7 @@ function Planner() {
   const [loading, setLoading] = useState(true);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskTag, setNewTaskTag] = useState("DSA");
+  const [newTaskPriority, setNewTaskPriority] = useState<"high" | "medium" | "low">("medium");
   const [learningPath, setLearningPath] = useState("FAANG Full Prep");
   const [solvedCount, setSolvedCount] = useState(0);
 
@@ -122,7 +123,7 @@ function Planner() {
         user_id: user.id,
         title: newTaskTitle.trim(),
         tag: newTaskTag,
-        priority: "medium",
+        priority: newTaskPriority,
         scheduled_at: todayStr,
         done: false,
       })
@@ -134,7 +135,7 @@ function Planner() {
         id: created.id,
         title: created.title,
         tag: created.tag ?? "General",
-        priority: "medium",
+        priority: newTaskPriority,
         done: false,
         scheduled_at: created.scheduled_at,
       }]);
@@ -256,6 +257,18 @@ function Planner() {
                 <option value="Mock">Mock Interview</option>
                 <option value="Study">Study / Notes</option>
                 <option value="Revision">Revision</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Priority</label>
+              <select
+                value={newTaskPriority}
+                onChange={e => setNewTaskPriority(e.target.value as "high" | "medium" | "low")}
+                className="w-full mt-1.5 h-10 rounded-xl border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="low">Low Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="high">High Priority</option>
               </select>
             </div>
             <Button type="submit" className="w-full bg-gradient-primary rounded-xl font-bold gap-2">

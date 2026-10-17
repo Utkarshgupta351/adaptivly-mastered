@@ -12,26 +12,26 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/learning-paths")({ component: LearningPaths });
 
-const topicsByPath: Record<string, Array<{ name: string; diff: string; time: string; icon: any }>> = {
+const topicsByPath: Record<string, Array<{ name: string; diff: string; time: string; icon: any; problemId?: number }>> = {
   "FAANG Full Prep": [
-    { name: "Arrays & Hashing", diff: "Easy", time: "8h", icon: Code2 },
-    { name: "Two Pointers", diff: "Easy", time: "6h", icon: Code2 },
-    { name: "Sliding Window", diff: "Medium", time: "10h", icon: Code2 },
-    { name: "Stack & Queues", diff: "Medium", time: "12h", icon: Code2 },
-    { name: "Binary Search", diff: "Medium", time: "10h", icon: Code2 },
-    { name: "Linked Lists", diff: "Medium", time: "8h", icon: Code2 },
-    { name: "Trees & BST", diff: "Hard", time: "16h", icon: Brain },
-    { name: "Graphs", diff: "Hard", time: "20h", icon: Brain },
-    { name: "Dynamic Programming", diff: "Hard", time: "24h", icon: Brain },
+    { name: "Arrays & Hashing", diff: "Easy", time: "8h", icon: Code2, problemId: 1 },
+    { name: "Two Pointers", diff: "Easy", time: "6h", icon: Code2, problemId: 4 },
+    { name: "Sliding Window", diff: "Medium", time: "10h", icon: Code2, problemId: 4 },
+    { name: "Stack & Queues", diff: "Medium", time: "12h", icon: Code2, problemId: 9 },
+    { name: "Binary Search", diff: "Medium", time: "10h", icon: Code2, problemId: 3 },
+    { name: "Linked Lists", diff: "Medium", time: "8h", icon: Code2, problemId: 8 },
+    { name: "Trees & BST", diff: "Hard", time: "16h", icon: Brain, problemId: 10 },
+    { name: "Graphs", diff: "Hard", time: "20h", icon: Brain, problemId: 10 },
+    { name: "Dynamic Programming", diff: "Hard", time: "24h", icon: Brain, problemId: 5 },
     { name: "System Design", diff: "Expert", time: "20h", icon: Server },
   ],
   "DSA Intensive": [
-    { name: "Arrays & Hashing", diff: "Easy", time: "8h", icon: Code2 },
-    { name: "Two Pointers", diff: "Easy", time: "6h", icon: Code2 },
-    { name: "Binary Search", diff: "Medium", time: "10h", icon: Code2 },
-    { name: "Trees & BST", diff: "Hard", time: "16h", icon: Brain },
-    { name: "Graphs", diff: "Hard", time: "20h", icon: Brain },
-    { name: "Dynamic Programming", diff: "Hard", time: "24h", icon: Brain },
+    { name: "Arrays & Hashing", diff: "Easy", time: "8h", icon: Code2, problemId: 1 },
+    { name: "Two Pointers", diff: "Easy", time: "6h", icon: Code2, problemId: 4 },
+    { name: "Binary Search", diff: "Medium", time: "10h", icon: Code2, problemId: 3 },
+    { name: "Trees & BST", diff: "Hard", time: "16h", icon: Brain, problemId: 10 },
+    { name: "Graphs", diff: "Hard", time: "20h", icon: Brain, problemId: 10 },
+    { name: "Dynamic Programming", diff: "Hard", time: "24h", icon: Brain, problemId: 5 },
   ],
   "System Design Pro": [
     { name: "High Level Architecture", diff: "Medium", time: "12h", icon: Server },
@@ -199,7 +199,9 @@ function LearningPaths() {
                     <Badge className="bg-emerald-brand/15 text-emerald-brand hover:bg-emerald-brand/20 border-emerald-brand/30">Completed</Badge>
                   ) : isUnlocked ? (
                     <Button size="sm" className="rounded-xl bg-gradient-primary gap-1" asChild>
-                      <Link to="/practice">Start <ArrowRight className="h-3.5 w-3.5" /></Link>
+                      <Link to="/practice" search={topic.problemId ? { id: topic.problemId } : { topic: topic.name }}>
+                        Start <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
                     </Button>
                   ) : (
                     <Badge variant="outline" className="text-muted-foreground">Locked</Badge>

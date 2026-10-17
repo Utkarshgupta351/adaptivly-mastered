@@ -316,10 +316,12 @@ APP_URL=http://localhost:3000
 2. Navigate to **SQL Editor** → **New query**.
 3. Execute the SQL migration scripts located in the `./supabase/migrations/` directory in the following exact order:
 
-   - **Step A**: Copy & run `supabase/migrations/001_schema.sql` *(Creates tables, constraints, & RLS policies)*.
+   - **Step A**: Copy & run `supabase/migrations/001_schema.sql` *(Creates base tables, constraints, & RLS policies)*.
    - **Step B**: Copy & run `supabase/migrations/002_functions.sql` *(Creates SQL helper procedures & streak triggers)*.
-   - **Step C**: Copy & run `supabase/migrations/004_adaptive_learning.sql` *(Creates adaptive learning tracking schema)*.
-   - **Step D**: Copy & run `supabase/seed.sql` *(Seeds initial 10 coding problems and starter code)*.
+   - **Step C**: Copy & run `supabase/migrations/003_add_report_to_mock_sessions.sql` *(Adds mock session report column)*.
+   - **Step D**: Copy & run `supabase/migrations/004_adaptive_learning.sql` *(Creates adaptive learning tracking schema)*.
+   - **Step E**: Copy & run `supabase/migrations/005_add_profile_onboarding_columns.sql` *(Adds learning path, onboarding, and goal fields to profiles)*.
+   - **Step F**: Copy & run `supabase/seed.sql` *(Seeds initial 10 coding problems and starter code)*.
 
 ---
 
