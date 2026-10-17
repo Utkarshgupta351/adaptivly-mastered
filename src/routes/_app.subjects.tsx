@@ -278,27 +278,62 @@ function Subjects() {
         </div>
       </div>
 
-      {/* Overview stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-border/40 bg-card p-5 shadow-soft">
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Total Solved</div>
-          <div className="text-3xl font-black">{totalSolvedAll}</div>
-          <div className="text-xs text-muted-foreground mt-1">problems completed across topics</div>
+      {/* ── Active Curriculum Spotlight & Overview Telemetry Bento ── */}
+      <div className="grid gap-5 lg:grid-cols-12 items-stretch">
+        {/* Spotlight Card (8 cols) */}
+        <div className="lg:col-span-8 rounded-3xl border border-border/60 bg-card/90 backdrop-blur-md p-6 md:p-7 shadow-soft relative overflow-hidden flex flex-col justify-between transition-all hover:shadow-elegant">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/[0.06] via-transparent to-transparent pointer-events-none" />
+          <div className="relative z-10 space-y-2.5">
+            <div className="flex items-center gap-2">
+              <Badge className="border-primary/20 bg-primary/10 text-primary gap-1 font-mono text-[11px] uppercase">
+                <BookOpen className="h-3 w-3" /> Core Curriculum
+              </Badge>
+              <span className="text-xs font-mono text-muted-foreground">Path: {learningPath}</span>
+            </div>
+            <h2 className="text-xl md:text-2xl font-extrabold font-display tracking-tight text-foreground">
+              Master Computer Science &amp; Systems Architecture
+            </h2>
+            <p className="text-xs md:text-sm text-muted-foreground leading-relaxed max-w-xl">
+              Comprehensive 8-subject syllabus mapped to practical coding problems, systems implementations, and interview questions.
+            </p>
+          </div>
+
+          <div className="relative z-10 mt-5 pt-4 border-t border-border/40 flex items-center justify-between text-xs font-mono">
+            <span className="text-muted-foreground">{filtered.length} of {ALL_SUBJECTS.length} Subject Tracks Active</span>
+            <span className="text-emerald-brand font-bold">{totalSolvedAll} Exercises Completed</span>
+          </div>
         </div>
-        <div className="rounded-2xl border border-border/40 bg-card p-5 shadow-soft">
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Active Path</div>
-          <div className="text-xl font-black">{learningPath}</div>
-          <div className="text-xs text-emerald-brand mt-1">{filtered.length} subjects in path</div>
-        </div>
-        <div className="rounded-2xl border border-border/40 bg-card p-5 shadow-soft">
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Subject Coverage</div>
-          <div className="text-xl font-black">{filtered.length} / {ALL_SUBJECTS.length}</div>
-          <div className="text-xs text-primary mt-1">topics in your roadmap</div>
+
+        {/* Telemetry Twin Dock (4 cols) */}
+        <div className="lg:col-span-4 grid grid-cols-2 lg:grid-cols-1 gap-3.5">
+          <div className="rounded-2xl border border-border/40 bg-card/90 backdrop-blur-sm p-4.5 shadow-soft flex items-center justify-between">
+            <div className="space-y-0.5">
+              <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest font-mono">Total Completed</div>
+              <div className="text-3xl font-extrabold font-display tracking-tight text-foreground">{totalSolvedAll}</div>
+              <div className="text-[11px] text-muted-foreground">Problems conquered across tracks</div>
+            </div>
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+              <Code2 className="h-5 w-5" />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border/40 bg-card/90 backdrop-blur-sm p-4.5 shadow-soft flex items-center justify-between">
+            <div className="space-y-0.5">
+              <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest font-mono">Syllabus Coverage</div>
+              <div className="text-3xl font-extrabold font-display tracking-tight text-foreground">
+                {Math.round((filtered.length / Math.max(ALL_SUBJECTS.length, 1)) * 100)}%
+              </div>
+              <div className="text-[11px] text-emerald-brand font-semibold">{filtered.length} tracks in active plan</div>
+            </div>
+            <div className="h-10 w-10 rounded-xl bg-emerald-brand/10 flex items-center justify-center text-emerald-brand shrink-0">
+              <Layers className="h-5 w-5" />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Subject grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* ── Subject Bento Grid ── */}
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((s) => {
           const solved = solvedCounts[s.topicKey] ?? 0;
           const total = totalCounts[s.topicKey] ?? 10;
@@ -308,35 +343,41 @@ function Subjects() {
             <Card
               key={s.name}
               onClick={() => setSelectedSubject(s)}
-              className="group relative overflow-hidden border-border/40 p-6 shadow-soft transition-all hover:-translate-y-1 hover:shadow-elegant hover:border-primary/30 cursor-pointer"
+              className="group relative overflow-hidden rounded-3xl border border-border/40 bg-card/90 backdrop-blur-sm p-6 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-elegant hover:border-primary/40 cursor-pointer flex flex-col justify-between"
             >
-              <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full blur-2xl opacity-0 group-hover:opacity-10 transition-all bg-gradient-primary" />
-              <div className="relative flex items-start justify-between mb-4">
-                <div className={`grid h-12 w-12 place-items-center rounded-2xl ${s.bg} group-hover:scale-110 transition-transform`}>
-                  <s.icon className={`h-5.5 w-5.5 ${s.color}`} />
+              <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full blur-2xl opacity-0 group-hover:opacity-15 transition-all bg-primary pointer-events-none" />
+              <div>
+                <div className="relative flex items-start justify-between mb-4">
+                  <div className={`grid h-12 w-12 place-items-center rounded-2xl ${s.bg} group-hover:scale-105 transition-transform`}>
+                    <s.icon className={`h-5.5 w-5.5 ${s.color}`} />
+                  </div>
+                  <Badge variant="outline" className={`text-xs font-mono ${diffColors[s.diff]}`}>{s.diff}</Badge>
                 </div>
-                <Badge variant="outline" className={`text-xs ${diffColors[s.diff]}`}>{s.diff}</Badge>
+                <h3 className="font-extrabold font-display text-base leading-snug mb-1 text-foreground">{s.name}</h3>
+                <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">{s.description}</p>
               </div>
-              <h3 className="font-bold leading-tight mb-1">{s.name}</h3>
-              <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{s.description}</p>
-              <div className="flex items-center justify-between text-xs text-muted-foreground mt-4 mb-2">
-                <span>{solved} solved</span>
-                <span className={`font-black text-sm ${pct >= 70 ? "text-emerald-brand" : pct >= 40 ? "text-amber-500" : "text-muted-foreground"}`}>
-                  {pct}%
-                </span>
+
+              <div className="mt-5 pt-3 border-t border-border/30">
+                <div className="flex items-center justify-between text-xs font-mono text-muted-foreground mb-2">
+                  <span>{solved} / {total} Solved</span>
+                  <span className={`font-bold text-xs ${pct >= 70 ? "text-emerald-brand" : pct >= 40 ? "text-amber-500" : "text-muted-foreground"}`}>
+                    {pct}%
+                  </span>
+                </div>
+                <Progress value={pct} className="h-1.5 rounded-full" />
+                <Button
+                  className="mt-4 w-full rounded-xl gap-2 font-semibold text-xs group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedSubject(s);
+                  }}
+                >
+                  <BookOpen className="h-3.5 w-3.5" /> Explore Syllabus
+                  <ArrowRight className="h-3.5 w-3.5 ml-auto transition-transform group-hover:translate-x-1" />
+                </Button>
               </div>
-              <Progress value={pct} className="h-2" />
-              <Button
-                className="mt-5 w-full rounded-xl gap-2 group-hover:bg-gradient-primary group-hover:text-primary-foreground group-hover:shadow-elegant transition-all"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedSubject(s);
-                }}
-              >
-                <BookOpen className="h-4 w-4" /> View Subject Syllabus
-                <ArrowRight className="h-3.5 w-3.5 ml-auto transition-transform group-hover:translate-x-1" />
-              </Button>
             </Card>
           );
         })}
