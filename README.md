@@ -355,6 +355,95 @@ The application will be accessible at:
 
 ---
 
+## 🌐 Production Deployment Guide
+
+Adaptivly is built on **TanStack Start** with the **Nitro server engine**, enabling seamless deployment across modern cloud platforms such as **Vercel** and **Railway**.
+
+---
+
+### 🔺 Option 1: Deploying to Vercel (Recommended)
+
+Vercel provides zero-configuration global edge distribution, automated SSL, and preview deployments for every pull request.
+
+#### Step 1: Import Project to Vercel
+1. Log into your [Vercel Dashboard](https://vercel.com/dashboard).
+2. Click **"Add New..."** → **"Project"**.
+3. Select your GitHub repository (`adaptivly-mastered`) and click **"Import"**.
+
+#### Step 2: Configure Build & Output Settings
+Under **Project Settings** in Vercel:
+- **Framework Preset**: Select **`Other`** *(do not select Vite or Next.js — TanStack Start utilizes Nitro)*.
+- **Root Directory**: `./` (or leave default if the repository root contains `package.json`).
+- **Build Command**: `npm run build`
+- **Output Directory**: Leave empty or `.output` *(Nitro automatically outputs to `.vercel/output` when the preset is configured)*.
+- **Install Command**: `npm install`
+- **Node.js Version**: **`20.x`** or higher (configured in Vercel General Settings).
+
+#### Step 3: Add Environment Variables
+In the **Environment Variables** section of your Vercel project, configure the following keys:
+
+| Key | Example Value | Description |
+|---|---|---|
+| `NITRO_PRESET` | `vercel` | **Critical**: Tells the Nitro build engine to output native Vercel Serverless Functions |
+| `VITE_SUPABASE_URL` | `https://xyz.supabase.co` | Your Supabase project REST endpoint (client & server) |
+| `VITE_SUPABASE_ANON_KEY` | `eyJhbGciOi...` | Supabase public anonymous API key (client-safe) |
+| `SUPABASE_SERVICE_ROLE_KEY`| `eyJhbGciOi...` | Supabase privileged service key (server-only) |
+| `GEMINI_API_KEY` | `AIzaSy...` | Google AI Studio API key for Gemini 2.5 Flash |
+| `JUDGE0_API_URL` | `https://judge0-ce.p.rapidapi.com` | Judge0 Code Execution API URL |
+| `JUDGE0_API_KEY` | `your-rapidapi-key` | RapidAPI key for sandbox code test execution |
+| `APP_URL` | `https://your-app.vercel.app` | Canonical production domain URL |
+
+> [!IMPORTANT]
+> The `NITRO_PRESET=vercel` environment variable is required. It instructs Nitro to package server functions into Vercel's `.vercel/output` format during the `npm run build` step.
+
+#### Step 4: Configure Supabase Auth Redirects
+Once Vercel generates your production URL (e.g., `https://adaptivly.vercel.app`):
+1. Navigate to your [Supabase Dashboard](https://supabase.com/dashboard) → **Authentication** → **URL Configuration**.
+2. Set **Site URL** to:
+   ```
+   https://your-app.vercel.app
+   ```
+3. In **Redirect URLs**, add the following wildcard patterns to support preview deployments and production callbacks:
+   ```
+   https://your-app.vercel.app/**
+   https://*.vercel.app/**
+   ```
+
+#### Step 5: Deploy & Verify
+1. Click **"Deploy"**. Vercel will run `npm install`, compile the Vite client assets, build the Nitro server bundle, and assign a production domain.
+2. Once the build finishes, open the live link and test:
+   - User Sign-Up / Login (verifies Supabase Auth & JWT cookie exchange).
+   - Code IDE submission (verifies Judge0 sandbox API).
+   - AI Tutor query (verifies Gemini API server function).
+
+---
+
+### 🚂 Option 2: Deploying to Railway (PaaS Container)
+
+The project includes a ready-to-use [`railway.toml`](railway.toml) configuration for continuous containerized deployment:
+
+1. Create a new project on [Railway](https://railway.app/).
+2. Select **"Deploy from GitHub repo"** and choose `adaptivly-mastered`.
+3. Add the required environment variables in Railway's **Variables** tab (same list as above, with `PORT=3000` and `APP_URL=https://<your-railway-domain>`).
+4. Railway will automatically detect `railway.toml`, build via Nixpacks using `npm run build`, and run the production server with:
+   ```bash
+   node .output/server/index.mjs
+   ```
+
+---
+
+### 🛡️ Production Verification & Sanity Checklist
+
+Before sharing your production deployment, run through this quick sanity check:
+
+- [ ] **Supabase RLS Policies**: Ensure SQL migrations `001_schema.sql` through `005_add_profile_onboarding_columns.sql` and `seed.sql` have been executed.
+- [ ] **Auth Cookies & Sessions**: Verify users can register, choose their initial daily goal, and navigate to the dashboard without session drops.
+- [ ] **Code Execution (Judge0)**: Test submitting Python and C++ code solutions to ensure RapidAPI quota is healthy.
+- [ ] **AI Video Summarizer**: Test pasting a YouTube URL to confirm serverless transcript extraction and Gemini markdown generation work without timeout issues.
+- [ ] **Responsive Bento Grid**: Verify the Bento dashboard scales cleanly from mobile (single column) to desktop (asymmetric 8/4 grid).
+
+---
+
 ## 📜 License & Credits
 
 Built as an advanced adaptive learning project. Designed for software engineers, students, and educators seeking to master computer science concepts with AI-assisted learning.
