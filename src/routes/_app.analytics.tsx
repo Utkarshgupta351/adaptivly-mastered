@@ -292,12 +292,12 @@ function Analytics() {
       </div>
 
       {/* Charts row 1 */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="border-border/40 p-6 shadow-soft">
+      <div className="grid gap-5 lg:grid-cols-3">
+        <Card className="rounded-3xl border border-border/40 bg-card/90 backdrop-blur-sm p-6 shadow-soft hover:shadow-elegant transition-all">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h3 className="font-bold">Problems solved trend</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Weekly problem count over 12 weeks</p>
+              <h3 className="font-extrabold font-display text-base tracking-tight text-foreground">Problems solved trend</h3>
+              <p className="text-xs text-muted-foreground mt-0.5 font-mono">Weekly problem count over 12 weeks</p>
             </div>
           </div>
           <div className="h-56">
@@ -305,25 +305,25 @@ function Analytics() {
               <AreaChart data={trend}>
                 <defs>
                   <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="oklch(0.68 0.19 268)" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="oklch(0.68 0.19 268)" stopOpacity={0} />
+                    <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis dataKey="w" stroke="var(--muted-foreground)" fontSize={11} axisLine={false} />
                 <YAxis stroke="var(--muted-foreground)" fontSize={11} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Area type="monotone" dataKey="solved" stroke="oklch(0.68 0.19 268)" fill="url(#g1)" strokeWidth={2.5} />
+                <Area type="monotone" dataKey="solved" stroke="var(--primary)" fill="url(#g1)" strokeWidth={2.5} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        <Card className="border-border/40 p-6 shadow-soft">
+        <Card className="rounded-3xl border border-border/40 bg-card/90 backdrop-blur-sm p-6 shadow-soft hover:shadow-elegant transition-all">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h3 className="font-bold">Accuracy trend</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Correct submissions percentage</p>
+              <h3 className="font-extrabold font-display text-base tracking-tight text-foreground">Accuracy trend</h3>
+              <p className="text-xs text-muted-foreground mt-0.5 font-mono">Correct submissions percentage</p>
             </div>
           </div>
           <div className="h-56">
@@ -333,17 +333,17 @@ function Analytics() {
                 <XAxis dataKey="w" stroke="var(--muted-foreground)" fontSize={11} axisLine={false} />
                 <YAxis stroke="var(--muted-foreground)" fontSize={11} axisLine={false} tickLine={false} domain={[0, 100]} />
                 <Tooltip contentStyle={tooltipStyle} formatter={(v) => [`${v}%`, "Accuracy"]} />
-                <Line type="monotone" dataKey="accuracy" stroke="oklch(0.68 0.17 162)" strokeWidth={3} dot={false} />
+                <Line type="monotone" dataKey="accuracy" stroke="var(--emerald-brand, oklch(0.68 0.17 162))" strokeWidth={3} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        <Card className="border-border/40 p-6 shadow-soft">
+        <Card className="rounded-3xl border border-border/40 bg-card/90 backdrop-blur-sm p-6 shadow-soft hover:shadow-elegant transition-all">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h3 className="font-bold">Confidence trend</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Average AI confidence score per interview</p>
+              <h3 className="font-extrabold font-display text-base tracking-tight text-foreground">Confidence trend</h3>
+              <p className="text-xs text-muted-foreground mt-0.5 font-mono">Avg AI confidence score per interview</p>
             </div>
           </div>
           <div className="h-56">
@@ -354,7 +354,7 @@ function Analytics() {
                   <XAxis dataKey="name" stroke="var(--muted-foreground)" fontSize={11} axisLine={false} />
                   <YAxis stroke="var(--muted-foreground)" fontSize={11} axisLine={false} tickLine={false} domain={[0, 100]} />
                   <Tooltip contentStyle={tooltipStyle} formatter={(v) => [`${v}%`, "Confidence"]} />
-                  <Line type="monotone" dataKey="Confidence" stroke="oklch(0.5 0.2 300)" strokeWidth={3} dot={false} />
+                  <Line type="monotone" dataKey="Confidence" stroke="var(--primary)" strokeWidth={3} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -368,10 +368,10 @@ function Analytics() {
 
       {/* Charts row 2 */}
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
-        <Card className="border-border/40 p-6 shadow-soft lg:col-span-1">
+        <Card className="rounded-3xl border border-border/40 bg-card/90 backdrop-blur-sm p-6 shadow-soft hover:shadow-elegant transition-all lg:col-span-1">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="font-bold">Daily study time</h3>
-            <span className="text-xs text-muted-foreground">This week</span>
+            <h3 className="font-extrabold font-display text-base tracking-tight text-foreground">Daily study time</h3>
+            <span className="text-xs text-muted-foreground font-mono">This week</span>
           </div>
           <div className="h-48">
             <ResponsiveContainer>
@@ -380,14 +380,14 @@ function Analytics() {
                 <XAxis dataKey="d" stroke="var(--muted-foreground)" fontSize={11} axisLine={false} />
                 <YAxis stroke="var(--muted-foreground)" fontSize={11} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={tooltipStyle} formatter={(v) => [`${v}h`, "Hours"]} />
-                <Bar dataKey="hrs" fill="oklch(0.68 0.19 268)" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="hrs" fill="var(--primary)" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        <Card className="border-border/40 p-6 shadow-soft">
-          <h3 className="font-bold mb-5">Difficulty breakdown</h3>
+        <Card className="rounded-3xl border border-border/40 bg-card/90 backdrop-blur-sm p-6 shadow-soft hover:shadow-elegant transition-all">
+          <h3 className="font-extrabold font-display text-base tracking-tight mb-5">Difficulty breakdown</h3>
           <div className="flex items-center gap-4">
             <div className="h-32 w-32 shrink-0">
               <ResponsiveContainer>
@@ -404,40 +404,40 @@ function Analytics() {
                 <div key={d.name}>
                   <div className="flex items-center gap-2 text-sm mb-1">
                     <div className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ background: d.color }} />
-                    <span className="font-medium w-16">{d.name}</span>
-                    <span className="font-bold ml-auto">{d.value}</span>
+                    <span className="font-medium w-16 text-xs">{d.name}</span>
+                    <span className="font-bold ml-auto font-mono text-xs">{d.value}</span>
                   </div>
                   <div className="h-1 rounded-full bg-muted overflow-hidden">
                     <div className="h-full rounded-full" style={{ background: d.color, width: `${stats.solved > 0 ? (d.value / stats.solved) * 100 : 0}%` }} />
                   </div>
                 </div>
               ))}
-              <div className="pt-1 text-xs text-muted-foreground">{stats.solved} total</div>
+              <div className="pt-1 text-xs text-muted-foreground font-mono">{stats.solved} total</div>
             </div>
           </div>
         </Card>
 
-        <Card className="border-border/40 p-6 shadow-soft">
-          <h3 className="font-bold mb-5">Topic Radar</h3>
+        <Card className="rounded-3xl border border-border/40 bg-card/90 backdrop-blur-sm p-6 shadow-soft hover:shadow-elegant transition-all">
+          <h3 className="font-extrabold font-display text-base tracking-tight mb-5">Topic Radar</h3>
           <div className="h-48">
             <ResponsiveContainer>
               <RadarChart data={radarData}>
                 <PolarGrid stroke="var(--border)" />
                 <RadarPolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} />
-                <Radar dataKey="A" stroke="oklch(0.68 0.19 268)" fill="oklch(0.68 0.19 268)" fillOpacity={0.2} />
+                <Radar dataKey="A" stroke="var(--primary)" fill="var(--primary)" fillOpacity={0.2} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        <Card className="border-border/40 p-6 shadow-soft">
-          <h3 className="font-bold mb-5">Interview Radar</h3>
+        <Card className="rounded-3xl border border-border/40 bg-card/90 backdrop-blur-sm p-6 shadow-soft hover:shadow-elegant transition-all">
+          <h3 className="font-extrabold font-display text-base tracking-tight text-foreground mb-5">Interview Radar</h3>
           <div className="h-48">
             <ResponsiveContainer>
               <RadarChart data={interviewRadar}>
                 <PolarGrid stroke="var(--border)" />
                 <RadarPolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} />
-                <Radar dataKey="A" stroke="oklch(0.68 0.17 162)" fill="oklch(0.68 0.17 162)" fillOpacity={0.2} />
+                <Radar dataKey="A" stroke="var(--primary)" fill="var(--primary)" fillOpacity={0.2} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
@@ -445,30 +445,30 @@ function Analytics() {
       </div>
 
       {/* Topic mastery */}
-      <Card className="border-border/40 p-6 shadow-soft">
+      <Card className="rounded-3xl border border-border/40 bg-card/90 backdrop-blur-sm p-6 shadow-soft hover:shadow-elegant transition-all">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="font-bold">Topic mastery</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Percentage of problems solved correctly per topic</p>
+            <h3 className="font-extrabold font-display text-base tracking-tight text-foreground">Topic mastery</h3>
+            <p className="text-xs text-muted-foreground mt-0.5 font-mono">Percentage of problems solved correctly per topic</p>
           </div>
-          <Badge variant="outline">{topics.length} topics</Badge>
+          <Badge variant="outline" className="font-mono text-xs">{topics.length} topics</Badge>
         </div>
         
         {topics.length === 0 ? (
-          <div className="text-sm text-muted-foreground py-8 text-center border-2 border-dashed border-border/50 rounded-xl">
+          <div className="text-sm text-muted-foreground py-8 text-center border-2 border-dashed border-border/50 rounded-2xl font-mono">
             Solve problems to see your topic mastery!
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {topics.map((t) => (
-              <div key={t.n} className="rounded-xl border border-border/40 p-4">
+              <div key={t.n} className="rounded-2xl border border-border/40 bg-muted/20 p-4 transition-colors hover:border-primary/30">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold">{t.n}</span>
-                  <span className={`text-sm font-black ${t.v >= 80 ? "text-emerald-brand" : t.v >= 60 ? "text-amber-500" : "text-destructive"}`}>
+                  <span className="text-sm font-semibold tracking-tight">{t.n}</span>
+                  <span className={`text-sm font-mono font-bold ${t.v >= 80 ? "text-emerald-brand" : t.v >= 60 ? "text-amber-500" : "text-destructive"}`}>
                     {t.v}%
                   </span>
                 </div>
-                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
@@ -477,7 +477,7 @@ function Analytics() {
                     }}
                   />
                 </div>
-                <div className="mt-1.5 text-xs text-muted-foreground">
+                <div className="mt-2 text-[11px] font-mono text-muted-foreground">
                   {t.v >= 80 ? "🟢 Strong" : t.v >= 60 ? "🟡 Good" : "🔴 Needs work"}
                 </div>
               </div>
@@ -487,27 +487,27 @@ function Analytics() {
       </Card>
 
       {/* Weak Topics */}
-      <Card className="border-border/40 p-6 shadow-soft">
+      <Card className="rounded-3xl border border-border/40 bg-card/90 backdrop-blur-sm p-6 shadow-soft hover:shadow-elegant transition-all">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="font-bold flex items-center gap-2">
+            <h3 className="font-extrabold font-display text-base tracking-tight text-foreground flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-destructive" /> Needs Attention
             </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Key weaknesses identified in your mock interviews</p>
+            <p className="text-xs text-muted-foreground mt-0.5 font-mono">Key weaknesses identified in your mock interviews</p>
           </div>
-          <Badge variant="outline">{topWeaknesses.length} areas</Badge>
+          <Badge variant="outline" className="font-mono text-xs">{topWeaknesses.length} areas</Badge>
         </div>
         
         {topWeaknesses.length === 0 ? (
-          <div className="text-sm text-muted-foreground py-8 text-center border-2 border-dashed border-border/50 rounded-xl">
+          <div className="text-sm text-muted-foreground py-8 text-center border-2 border-dashed border-border/50 rounded-2xl font-mono">
             Complete mock interviews to identify your weak topics!
           </div>
         ) : (
           <div className="flex flex-wrap gap-3">
             {topWeaknesses.map((w) => (
-              <div key={w.name} className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm">
-                <span className="font-medium text-destructive">{w.name}</span>
-                <Badge variant="secondary" className="bg-destructive/10 text-destructive border-0">
+              <div key={w.name} className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/5 px-3.5 py-2 text-sm font-medium">
+                <span className="text-destructive tracking-tight">{w.name}</span>
+                <Badge variant="secondary" className="bg-destructive/10 text-destructive border-0 font-mono text-xs">
                   {w.count} {w.count === 1 ? 'mention' : 'mentions'}
                 </Badge>
               </div>

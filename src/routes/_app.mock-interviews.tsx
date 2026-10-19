@@ -952,26 +952,26 @@ function Mock() {
           { icon: Clock, label: "Total time", value: `${totalHours}h ${totalMins}m`, color: "text-amber-500", bg: "bg-amber-500/10" },
           { icon: MessageSquare, label: "Pending", value: `${pendingSessions.length} sessions`, color: "text-purple-400", bg: "bg-purple-400/10" },
         ].map((s) => (
-          <div key={s.label} className="rounded-2xl border border-border/40 bg-card p-5 shadow-soft">
+          <div key={s.label} className="group rounded-3xl border border-border/40 bg-card/90 backdrop-blur-sm p-5 shadow-soft hover:shadow-elegant transition-all hover:border-primary/30">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{s.label}</span>
-              <div className={`grid h-9 w-9 place-items-center rounded-xl ${s.bg}`}>
+              <span className="text-[11px] font-mono font-semibold text-muted-foreground uppercase tracking-widest">{s.label}</span>
+              <div className={`grid h-9 w-9 place-items-center rounded-xl ${s.bg} transition-transform group-hover:scale-105`}>
                 <s.icon className={`h-4.5 w-4.5 ${s.color}`} />
               </div>
             </div>
-            <div className="text-xl font-black">{s.value}</div>
+            <div className="text-2xl font-extrabold font-display text-foreground tracking-tight">{s.value}</div>
           </div>
         ))}
       </div>
 
       {/* Interview type cards */}
       <div>
-        <h2 className="font-bold text-lg mb-4 flex items-center gap-2">Start a new interview</h2>
+        <h2 className="font-extrabold font-display text-xl tracking-tight text-foreground mb-4 flex items-center gap-2">Start a new interview</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {types.map((t) => (
             <Card
               key={t.name}
-              className={`group relative overflow-hidden border-border/40 p-6 shadow-soft transition-all ${!t.unlocked ? "opacity-75 grayscale hover:grayscale-0" : "hover:-translate-y-1 hover:shadow-elegant hover:border-primary/30"}`}
+              className={`group relative overflow-hidden rounded-3xl border border-border/40 bg-card/90 backdrop-blur-sm p-6 shadow-soft transition-all ${!t.unlocked ? "opacity-75 grayscale hover:grayscale-0" : "hover:-translate-y-1 hover:shadow-elegant hover:border-primary/40"}`}
             >
               {!t.unlocked && (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">
@@ -984,14 +984,14 @@ function Mock() {
                 <div className={`grid h-12 w-12 place-items-center rounded-2xl ${t.bg} group-hover:scale-110 transition-transform`}>
                   <t.icon className={`h-5.5 w-5.5 ${t.color}`} />
                 </div>
-                <Badge variant="outline" className={`text-xs ${diffColors[t.difficulty]}`}>
+                <Badge variant="outline" className={`text-xs font-mono rounded-lg ${diffColors[t.difficulty]}`}>
                   {t.difficulty}
                 </Badge>
               </div>
-              <h3 className="mt-4 font-bold text-base">{t.name}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{t.desc}</p>
-              <div className="mt-4 flex items-center justify-between">
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <h3 className="mt-4 font-extrabold font-display text-base tracking-tight text-foreground">{t.name}</h3>
+              <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{t.desc}</p>
+              <div className="mt-5 flex items-center justify-between pt-3 border-t border-border/30">
+                <div className="flex items-center gap-3 text-xs font-mono text-muted-foreground">
                   <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{t.time}</span>
                   <span className="flex items-center gap-1"><Play className="h-3 w-3" />{t.count} done</span>
                 </div>
@@ -999,7 +999,7 @@ function Mock() {
                   size="sm" 
                   disabled={!t.unlocked || isSending}
                   onClick={() => handleStart(t.name)}
-                  className="bg-gradient-primary rounded-xl gap-1.5 shadow-elegant"
+                  className="bg-gradient-primary rounded-xl gap-1.5 shadow-elegant font-semibold text-xs"
                 >
                   {t.unlocked ? (
                     <>
@@ -1016,15 +1016,15 @@ function Mock() {
           ))}
 
           {/* Custom interview CTA */}
-          <Card className="group border-dashed border-2 border-border/40 p-6 shadow-soft flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-primary/40 hover:bg-primary/5 transition-all">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-muted">
-              <Sparkles className="h-5 w-5 text-muted-foreground" />
+          <Card className="group rounded-3xl border-dashed border-2 border-border/50 bg-card/40 backdrop-blur-sm p-6 shadow-soft flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-primary/40 hover:bg-card/80 transition-all">
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-muted/60 transition-transform group-hover:scale-110">
+              <Sparkles className="h-5 w-5 text-primary" />
             </div>
             <div className="text-center">
-              <div className="font-bold text-sm">Custom interview</div>
+              <div className="font-extrabold font-display text-base tracking-tight text-foreground">Custom interview</div>
               <div className="text-xs text-muted-foreground mt-0.5">Choose topics, difficulty & duration</div>
             </div>
-            <Button variant="outline" size="sm" className="rounded-xl mt-1">Configure →</Button>
+            <Button variant="outline" size="sm" className="rounded-xl mt-1 font-semibold text-xs border-border/60 hover:border-primary/40">Configure →</Button>
           </Card>
         </div>
       </div>
@@ -1036,16 +1036,16 @@ function Mock() {
           { icon: Video, title: "Video mode", desc: "Simulate a real video call interview with the AI.", badge: "Pro", color: "text-blue-400", bg: "bg-blue-400/10" },
           { icon: Code2, title: "Live coding", desc: "Shared editor where the AI can see your code.", badge: "Popular", color: "text-emerald-brand", bg: "bg-emerald-brand/10" },
         ].map((m) => (
-          <Card key={m.title} className="border-border/40 p-5 shadow-soft flex items-start gap-4">
+          <Card key={m.title} className="rounded-3xl border border-border/40 bg-card/90 backdrop-blur-sm p-5 shadow-soft flex items-start gap-4 transition-all hover:border-primary/30">
             <div className={`grid h-10 w-10 place-items-center rounded-xl shrink-0 ${m.bg}`}>
               <m.icon className={`h-5 w-5 ${m.color}`} />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-sm">{m.title}</span>
-                <Badge variant="outline" className="text-[10px]">{m.badge}</Badge>
+                <span className="font-extrabold font-display text-sm tracking-tight text-foreground">{m.title}</span>
+                <Badge variant="outline" className="text-[10px] font-mono rounded-md">{m.badge}</Badge>
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">{m.desc}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{m.desc}</p>
             </div>
           </Card>
         ))}

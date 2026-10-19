@@ -161,314 +161,391 @@ function Dashboard() {
     }));
   };
 
+  const completedTasksCount = todayTasks.filter(t => t.done).length;
+
   return (
     <div className="space-y-6">
       <PageHeader
         title={`Welcome back, ${firstName} 👋`}
         description={
           profile?.streak
-            ? `You're on a ${profile.streak}-day streak. Keep the momentum going.`
-            : "Start your journey today — solve your first problem!"
+            ? `You're on a ${profile.streak}-day streak. Keep your momentum going today.`
+            : "Your adaptive learning path is ready — solve your first problem today!"
         }
       >
-        <Button className="bg-gradient-primary shadow-elegant rounded-xl gap-2" asChild>
-          <Link to="/practice"><Play className="h-4 w-4" /> Continue learning</Link>
-        </Button>
+        <div className="flex items-center gap-2.5">
+          {profile?.streak ? (
+            <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-500 dark:text-amber-400 gap-1.5 px-3 py-1 font-mono text-xs">
+              <Flame className="h-3.5 w-3.5 text-amber-500 animate-pulse" /> {profile.streak} Day Streak
+            </Badge>
+          ) : null}
+          <Button className="bg-gradient-primary shadow-elegant rounded-xl gap-2 font-semibold text-xs h-9 px-4" asChild>
+            <Link to="/practice"><Play className="h-3.5 w-3.5" /> Continue Session</Link>
+          </Button>
+        </div>
       </PageHeader>
 
-      {/* Goal banner */}
-      <Card className="relative overflow-hidden border-0 p-0 shadow-elegant">
-        <div className="absolute inset-0 bg-gradient-primary" />
-        <div className="absolute inset-0 bg-gradient-mesh opacity-30" />
-        <div className="relative grid gap-6 p-8 md:grid-cols-[1fr_auto] md:items-center">
-          <div className="text-primary-foreground">
-            <Badge className="mb-3 border-white/20 bg-white/15 text-primary-foreground backdrop-blur gap-1.5">
-              <Sparkles className="h-3 w-3" /> Daily Goal
-            </Badge>
-            <h2 className="text-2xl font-black md:text-3xl">
-              {goalPct >= 100 ? "🎉 Daily goal complete!" : `You're ${goalPct}% to today's goal!`}
-            </h2>
-            <p className="mt-2 text-primary-foreground/80 text-sm">
-              {goalPct >= 100
-                ? `You solved ${todaySolved} problems today. Amazing work!`
-                : `Solve ${Math.max(dailyGoal - todaySolved, 0)} more problem${dailyGoal - todaySolved !== 1 ? "s" : ""} to hit your daily target of ${dailyGoal}.`}
-            </p>
-            <div className="mt-5 max-w-md">
-              <div className="flex justify-between text-xs text-primary-foreground/70 mb-2">
-                <span>{todaySolved} / {dailyGoal} problems</span>
-                <span>{goalPct}%</span>
-              </div>
-              <div className="h-2.5 overflow-hidden rounded-full bg-white/20">
-                <div className="h-full rounded-full bg-white transition-all" style={{ width: `${goalPct}%` }} />
-              </div>
-            </div>
-          </div>
-          <div className="h-36 w-36 shrink-0">
-            <ResponsiveContainer>
-              <RadialBarChart innerRadius="68%" outerRadius="100%" data={[{ v: goalPct }]} startAngle={90} endAngle={-270}>
-                <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-                <RadialBar dataKey="v" cornerRadius={20} fill="rgba(255,255,255,0.9)" background={{ fill: "rgba(255,255,255,0.15)" }} />
-              </RadialBarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </Card>
+      {/* ── BENTO ROW 1: Hero Command Center (8 cols) + Telemetry Pillar (4 cols) ── */}
+      <div className="grid gap-5 lg:grid-cols-12 items-stretch">
+        {/* Dominant Hero Command Tile */}
+        <div className="lg:col-span-8 rounded-3xl border border-border/60 bg-card/90 backdrop-blur-md p-7 md:p-8 shadow-soft relative overflow-hidden flex flex-col justify-between transition-all hover:shadow-elegant">
+          {/* Subtle top edge starlight rim and corner ambient glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.07] via-transparent to-transparent pointer-events-none" />
+          <div className="absolute -top-24 -left-24 h-56 w-56 rounded-full blur-3xl opacity-20 bg-primary pointer-events-none" />
 
-      {/* Adaptive Learning Recommendations */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold tracking-tight">Your Adaptive Path</h3>
-            <p className="text-xs text-muted-foreground">Tailored daily roadmap powered by your Diagnostic Assessment.</p>
-          </div>
-          <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
-            <Activity className="h-3 w-3 mr-1 animate-pulse" /> Evolving Live
-          </Badge>
-        </div>
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="max-w-xl space-y-3">
+              <div className="flex items-center gap-2">
+                <Badge className="border-primary/20 bg-primary/10 text-primary gap-1 text-[11px] font-mono tracking-wide uppercase px-2.5 py-0.5">
+                  <Sparkles className="h-3 w-3" /> Focus Milestone
+                </Badge>
+                <span className="text-xs text-muted-foreground font-mono">
+                  Track: {profile?.learning_path ?? "DSA Master"}
+                </span>
+              </div>
 
-        {recsLoading ? (
-          <Card className="p-8 border-border/40 flex items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          </Card>
-        ) : recs ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {/* Today's Learning */}
-            <Card className="p-5 border-border/40 shadow-soft flex flex-col justify-between hover:shadow-elegant transition-all">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                  <BookOpen className="h-4 w-4 text-primary" /> Today's Learning
+              <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight font-display text-foreground">
+                {goalPct >= 100
+                  ? "🎉 Daily Target Conquered!"
+                  : `You're ${goalPct}% through today's target`}
+              </h2>
+
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {goalPct >= 100
+                  ? `Incredible work. You've solved ${todaySolved} problems today and secured your daily XP bonus.`
+                  : `Solve ${Math.max(dailyGoal - todaySolved, 0)} more problem${dailyGoal - todaySolved !== 1 ? "s" : ""} to complete today's target of ${dailyGoal} problems.`}
+              </p>
+
+              {/* Progress bar and numeric readout */}
+              <div className="pt-2 max-w-md space-y-2">
+                <div className="flex justify-between text-xs font-mono">
+                  <span className="font-semibold text-foreground">{todaySolved} / {dailyGoal} Problems Completed</span>
+                  <span className="font-bold text-primary">{goalPct}%</span>
                 </div>
-                <h4 className="text-base font-extrabold">{recs.todaysLearning.topic}</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {recs.todaysLearning.description}
-                </p>
-              </div>
-              <Button size="sm" className="mt-4 w-full rounded-xl bg-gradient-primary" asChild>
-                <Link to={recs.todaysLearning.path}>{recs.todaysLearning.actionLabel}</Link>
-              </Button>
-            </Card>
-
-            {/* Today's Revision */}
-            <Card className="p-5 border-border/40 shadow-soft flex flex-col justify-between hover:shadow-elegant transition-all">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                  <Layers className="h-4 w-4 text-emerald-brand" /> Today's Revision
+                <div className="h-2 rounded-full bg-muted/60 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-500 shadow-glow"
+                    style={{ width: `${goalPct}%` }}
+                  />
                 </div>
-                <h4 className="text-base font-extrabold">{recs.todaysRevision.topic} Revision</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  You haven't reviewed this topic in {recs.todaysRevision.daysSinceReview} days. Retain your mastery with dynamic revision cards.
-                </p>
               </div>
-              <Button size="sm" variant="outline" className="mt-4 w-full rounded-xl" asChild>
-                <Link to={recs.todaysRevision.path}>{recs.todaysRevision.actionLabel}</Link>
-              </Button>
-            </Card>
-
-            {/* Today's Flashcards & Quiz */}
-            <Card className="p-5 border-border/40 shadow-soft space-y-4 hover:shadow-elegant transition-all">
-              <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                <FileQuestion className="h-4 w-4 text-amber-500" /> Today's Flashcards &amp; Quiz
-              </div>
-              <div className="space-y-2">
-                <Link to={recs.todaysFlashcards.path} className="flex items-center justify-between p-2.5 rounded-xl border border-border/30 hover:bg-muted/40 transition-colors text-xs font-medium">
-                  <span>🗂️ {recs.todaysFlashcards.deckName} ({recs.todaysFlashcards.cardCount} cards)</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-                <Link to={recs.todaysQuiz.path} className="flex items-center justify-between p-2.5 rounded-xl border border-border/30 hover:bg-muted/40 transition-colors text-xs font-medium">
-                  <span>📝 {recs.todaysQuiz.topic} Custom Quiz ({recs.todaysQuiz.questionCount} Qs)</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </Card>
-
-            {/* Weak Topics */}
-            <Card className="p-5 border-border/40 shadow-soft hover:shadow-elegant transition-all">
-              <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
-                <Award className="h-4 w-4 text-destructive" /> Weak Topics (&lt;60%)
-              </div>
-              <div className="space-y-2.5">
-                {recs.weakTopics.map(wt => (
-                  <div key={wt.name} className="space-y-1">
-                    <div className="flex justify-between text-xs font-semibold">
-                      <span>{wt.name}</span>
-                      <span className="text-destructive font-bold">{wt.score}%</span>
-                    </div>
-                    <Progress value={wt.score} className="h-1 rounded-full" />
-                  </div>
-                ))}
-                {recs.weakTopics.length === 0 && (
-                  <div className="text-xs text-muted-foreground py-2">Awesome! You have no weak topics.</div>
-                )}
-              </div>
-            </Card>
-
-            {/* Suggested Videos */}
-            <Card className="p-5 border-border/40 shadow-soft hover:shadow-elegant transition-all">
-              <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
-                <Video className="h-4 w-4 text-red-500" /> Suggested Videos
-              </div>
-              <div className="space-y-2">
-                {recs.suggestedVideos.map((vid, idx) => (
-                  <a key={idx} href={vid.url} target="_blank" rel="noreferrer" className="block p-2 rounded-lg border border-border/30 hover:bg-muted/40 transition-all">
-                    <div className="text-xs font-bold truncate">{vid.title}</div>
-                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                      <span>{vid.channel}</span>
-                      <span>{vid.duration}</span>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </Card>
-
-            {/* Recommended Sessions */}
-            <Card className="p-5 border-border/40 shadow-soft space-y-3.5 hover:shadow-elegant transition-all">
-              <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                <Bot className="h-4 w-4 text-purple-500" /> AI Recommendations
-              </div>
-              <div className="space-y-2">
-                <Link to="/ai-tutor" className="block w-full p-2.5 rounded-xl border border-purple-500/20 bg-purple-500/5 hover:bg-purple-500/10 text-xs font-semibold text-purple-600 dark:text-purple-400">
-                  🤖 {recs.recommendedTutorSession.actionLabel}
-                </Link>
-                <Link to="/mock-interviews" className="block w-full p-2.5 rounded-xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 text-xs font-semibold text-amber-600 dark:text-amber-400">
-                  🎯 {recs.recommendedMockInterview.actionLabel}
-                </Link>
-              </div>
-            </Card>
-          </div>
-        ) : null}
-      </div>
-
-      {/* Stat cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Flame} label="Streak" value={`${profile?.streak ?? 0} days`} color="text-amber-500" bg="bg-amber-500/10" trend="up" />
-        <StatCard icon={Trophy} label="Total XP" value={xpDisplay} color="text-primary" bg="bg-primary/10" trend="up" />
-        <StatCard icon={Coins} label="Coins" value={String(profile?.coins ?? 0)} color="text-yellow-500" bg="bg-yellow-500/10" />
-        <StatCard icon={Award} label="Badges" value={`${badgeCount} earned`} color="text-emerald-brand" bg="bg-emerald-brand/10" />
-      </div>
-
-      {/* Heatmap + Tasks */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="border-border/40 p-6 shadow-soft lg:col-span-2">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="font-bold">Learning heatmap</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Your activity over the last 20 weeks</p>
             </div>
-            <Badge variant="outline" className="border-emerald-brand/30 text-emerald-brand">
-              {totalSolved} solved total
-            </Badge>
-          </div>
-          <div className="overflow-x-auto">
-            <Heatmap data={heatmap} />
-          </div>
-          <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-            <span>Less</span>
-            {["bg-muted/40", "bg-primary/20", "bg-primary/40", "bg-primary/65", "bg-primary/90"].map((c, i) => (
-              <div key={i} className={`h-3 w-3 rounded-sm ${c}`} />
-            ))}
-            <span>More</span>
-          </div>
-        </Card>
 
-        <Card className="border-border/40 p-6 shadow-soft">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold">Today's tasks</h3>
-            <Badge variant="outline">
-              {todayTasks.filter(t => t.done).length} / {todayTasks.length}
-            </Badge>
-          </div>
-          {todayTasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-muted/40 flex items-center justify-center">
-                <Target className="h-5 w-5 text-muted-foreground" />
+            {/* Radial progress ring */}
+            <div className="relative h-32 w-32 shrink-0 grid place-items-center self-center md:self-auto">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadialBarChart innerRadius="74%" outerRadius="100%" data={[{ v: goalPct }]} startAngle={90} endAngle={-270}>
+                  <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+                  <RadialBar dataKey="v" cornerRadius={12} fill="var(--primary)" background={{ fill: "color-mix(in oklab, var(--card) 40%, var(--muted))" }} />
+                </RadialBarChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-lg font-black font-display tracking-tight text-foreground">{goalPct}%</span>
+                <span className="text-[10px] uppercase font-mono text-muted-foreground tracking-wider">Goal</span>
               </div>
-              <p className="text-sm text-muted-foreground">No tasks planned for today</p>
-              <Button size="sm" variant="outline" className="rounded-xl" asChild>
-                <Link to="/planner">Add tasks →</Link>
-              </Button>
             </div>
-          ) : (
-            <div className="space-y-2.5">
-              {todayTasks.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => toggleTask(t.id, t.done)}
-                  className={`w-full flex items-center gap-3 rounded-xl border p-3 transition-colors text-left ${
-                    t.done ? "border-emerald-brand/20 bg-emerald-brand/5" : "border-border/40 hover:border-primary/30"
-                  }`}
-                >
-                  <CheckCircle2 className={`h-4 w-4 shrink-0 ${t.done ? "text-emerald-brand" : "text-muted-foreground/30"}`} />
-                  <div className="flex-1 min-w-0">
-                    <span className={`text-sm ${t.done ? "text-muted-foreground line-through" : "font-medium"}`}>{t.title}</span>
-                  </div>
-                  <Badge variant="outline" className="text-[10px] shrink-0">{t.tag}</Badge>
-                </button>
-              ))}
+          </div>
+
+          {/* Quick Launcher strip */}
+          {recs?.todaysLearning && (
+            <div className="relative z-10 mt-6 pt-5 border-t border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <BookOpen className="h-4 w-4 text-primary" />
+                </div>
+                <div className="truncate">
+                  <div className="text-xs font-mono text-muted-foreground uppercase tracking-wider">Recommended Next Step</div>
+                  <div className="text-xs font-bold text-foreground truncate">{recs.todaysLearning.topic}</div>
+                </div>
+              </div>
+
+              <Button size="sm" className="rounded-xl bg-primary text-primary-foreground font-semibold text-xs gap-1.5 shrink-0" asChild>
+                <Link to={recs.todaysLearning.path}>
+                  <span>Start Module</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
             </div>
           )}
-          <Button size="sm" className="mt-4 w-full rounded-xl bg-gradient-primary" asChild>
-            <Link to="/planner">View planner →</Link>
-          </Button>
-        </Card>
+        </div>
+
+        {/* Telemetry Pillar (4 cols) */}
+        <div className="lg:col-span-4 flex flex-col gap-3.5 justify-between">
+          {/* Streak Feature Tile */}
+          <div className="rounded-2xl border border-amber-500/20 bg-card/90 backdrop-blur-sm p-4.5 shadow-soft transition-all duration-200 hover:shadow-elegant hover:border-amber-500/40 flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest font-mono">Streak Momentum</span>
+              <div className="text-2xl font-extrabold font-display tracking-tight text-foreground flex items-center gap-2">
+                <span>{profile?.streak ?? 0}</span>
+                <span className="text-xs font-semibold text-muted-foreground font-sans">Days Active</span>
+              </div>
+              <div className="text-[11px] text-amber-500/90 font-medium flex items-center gap-1">
+                <Flame className="h-3 w-3" /> Daily consistency multiplier active
+              </div>
+            </div>
+            <div className="h-11 w-11 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0 text-amber-500">
+              <Flame className="h-6 w-6" />
+            </div>
+          </div>
+
+          {/* XP Tile */}
+          <div className="rounded-2xl border border-border/40 bg-card/90 backdrop-blur-sm p-4.5 shadow-soft transition-all duration-200 hover:shadow-elegant hover:border-primary/30 flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest font-mono">Accumulated Mastery</span>
+              <div className="text-2xl font-extrabold font-display tracking-tight text-foreground flex items-center gap-2">
+                <span>{xpDisplay}</span>
+                <span className="text-xs font-semibold text-muted-foreground font-sans">XP Total</span>
+              </div>
+              <div className="text-[11px] text-emerald-brand font-medium">↑ Leveling towards Senior Tier</div>
+            </div>
+            <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-primary">
+              <Trophy className="h-5 w-5" />
+            </div>
+          </div>
+
+          {/* Coins & Badges Twin Dock */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-border/40 bg-card/90 backdrop-blur-sm p-3.5 shadow-soft flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-yellow-500/10 flex items-center justify-center shrink-0 text-yellow-500">
+                <Coins className="h-4.5 w-4.5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase font-mono text-muted-foreground font-semibold">Coins</div>
+                <div className="text-base font-extrabold font-display leading-tight">{profile?.coins ?? 0}</div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/40 bg-card/90 backdrop-blur-sm p-3.5 shadow-soft flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-emerald-brand/10 flex items-center justify-center shrink-0 text-emerald-brand">
+                <Award className="h-4.5 w-4.5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase font-mono text-muted-foreground font-semibold">Badges</div>
+                <div className="text-base font-extrabold font-display leading-tight">{badgeCount} Earned</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Weekly chart + Quick actions */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="border-border/40 p-6 shadow-soft lg:col-span-2">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="font-bold">This week</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Problems solved per day</p>
+      {/* ── BENTO ROW 2: Adaptive Intelligence Studio (7 cols) + Focused Task Dock (5 cols) ── */}
+      <div className="grid gap-5 lg:grid-cols-12 items-stretch">
+        {/* Adaptive Intelligence Studio */}
+        <div className="lg:col-span-7 rounded-3xl border border-border/50 bg-card/90 backdrop-blur-md p-6 shadow-soft flex flex-col justify-between transition-all hover:shadow-elegant">
+          <div>
+            <div className="flex items-center justify-between pb-4 border-b border-border/40">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  <Activity className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold font-display text-base tracking-tight text-foreground">Adaptive Intelligence Engine</h3>
+                  <p className="text-xs text-muted-foreground">Diagnostics dynamically tailoring your weak spots.</p>
+                </div>
+              </div>
+              <Badge variant="outline" className="text-[10px] font-mono border-primary/20 text-primary">Live Calibration</Badge>
             </div>
-            <Badge variant="outline">
-              {weekData.reduce((s, d) => s + d.problems, 0)} this week
+
+            {recsLoading ? (
+              <div className="py-12 flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : recs ? (
+              <div className="grid gap-4 sm:grid-cols-2 pt-4">
+                {/* Weak Topics */}
+                <div className="rounded-2xl border border-border/40 bg-muted/20 p-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs font-mono font-semibold text-muted-foreground uppercase">
+                    <span>Weak Areas (&lt;60%)</span>
+                    <Award className="h-3.5 w-3.5 text-destructive" />
+                  </div>
+                  <div className="space-y-2">
+                    {recs.weakTopics.map((wt) => (
+                      <div key={wt.name} className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="font-semibold text-foreground truncate max-w-[130px]">{wt.name}</span>
+                          <span className="font-mono text-destructive font-bold">{wt.score}%</span>
+                        </div>
+                        <Progress value={wt.score} className="h-1 rounded-full bg-muted" />
+                      </div>
+                    ))}
+                    {recs.weakTopics.length === 0 && (
+                      <div className="text-xs text-muted-foreground py-3 text-center">Zero weak topics identified — mastery confirmed!</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Spaced Revision */}
+                <div className="rounded-2xl border border-border/40 bg-muted/20 p-4 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs font-mono font-semibold text-muted-foreground uppercase">
+                      <span>Memory Retention</span>
+                      <Layers className="h-3.5 w-3.5 text-emerald-brand" />
+                    </div>
+                    <div className="text-sm font-bold text-foreground">{recs.todaysRevision.topic}</div>
+                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+                      Review interval due: last practiced {recs.todaysRevision.daysSinceReview} days ago. Retain your neural pathways.
+                    </p>
+                  </div>
+
+                  <Button size="sm" variant="outline" className="mt-3 w-full rounded-xl text-xs font-semibold" asChild>
+                    <Link to={recs.todaysRevision.path}>{recs.todaysRevision.actionLabel}</Link>
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          {/* Quick Deck Bar */}
+          {recs && (
+            <div className="mt-5 pt-4 border-t border-border/40 grid grid-cols-2 gap-2.5">
+              <Link to={recs.todaysFlashcards.path} className="flex items-center justify-between p-2.5 rounded-xl border border-border/30 hover:bg-muted/30 transition-colors text-xs font-medium">
+                <span className="truncate">🗂️ {recs.todaysFlashcards.deckName} ({recs.todaysFlashcards.cardCount})</span>
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              </Link>
+              <Link to={recs.todaysQuiz.path} className="flex items-center justify-between p-2.5 rounded-xl border border-border/30 hover:bg-muted/30 transition-colors text-xs font-medium">
+                <span className="truncate">📝 {recs.todaysQuiz.topic} Quiz</span>
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Focused Task Dock */}
+        <div className="lg:col-span-5 rounded-3xl border border-border/50 bg-card/90 backdrop-blur-md p-6 shadow-soft flex flex-col justify-between transition-all hover:shadow-elegant">
+          <div>
+            <div className="flex items-center justify-between pb-4 border-b border-border/40">
+              <div className="flex items-center gap-2">
+                <h3 className="font-extrabold font-display text-base tracking-tight text-foreground">Today's Agenda</h3>
+                <Badge variant="outline" className="font-mono text-[10px]">
+                  {completedTasksCount} / {todayTasks.length} Done
+                </Badge>
+              </div>
+              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-primary" asChild>
+                <Link to="/planner">Open Planner →</Link>
+              </Button>
+            </div>
+
+            <div className="pt-3">
+              {todayTasks.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
+                  <div className="h-10 w-10 rounded-xl bg-muted/40 flex items-center justify-center text-muted-foreground">
+                    <Target className="h-5 w-5" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">All daily goals clear! Add a custom revision task.</p>
+                  <Button size="sm" variant="outline" className="rounded-xl text-xs mt-1" asChild>
+                    <Link to="/planner">+ Add Agenda Item</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {todayTasks.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => toggleTask(t.id, t.done)}
+                      className={`w-full flex items-center gap-3 rounded-xl border p-2.5 transition-all text-left ${
+                        t.done ? "border-emerald-brand/20 bg-emerald-brand/[0.04]" : "border-border/40 hover:border-primary/30 hover:bg-muted/30"
+                      }`}
+                    >
+                      <CheckCircle2 className={`h-4 w-4 shrink-0 transition-colors ${t.done ? "text-emerald-brand" : "text-muted-foreground/30"}`} />
+                      <div className="flex-1 min-w-0">
+                        <span className={`text-xs ${t.done ? "text-muted-foreground line-through font-normal" : "font-semibold text-foreground"}`}>{t.title}</span>
+                      </div>
+                      <Badge variant="outline" className="text-[9px] font-mono shrink-0 uppercase">{t.tag}</Badge>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-border/30 flex items-center justify-between text-xs text-muted-foreground">
+            <span className="font-mono">Adaptive scheduling</span>
+            <span className="text-emerald-brand font-semibold">SM-2 Spaced Repetition</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── BENTO ROW 3: Activity Tapestry (8 cols) + Velocity Chart (4 cols) ── */}
+      <div className="grid gap-5 lg:grid-cols-12 items-stretch">
+        {/* Learning Activity Tapestry */}
+        <div className="lg:col-span-8 rounded-3xl border border-border/50 bg-card/90 backdrop-blur-md p-6 shadow-soft transition-all hover:shadow-elegant">
+          <div className="flex items-center justify-between mb-5 pb-3 border-b border-border/40">
+            <div>
+              <h3 className="font-extrabold font-display text-base tracking-tight text-foreground">Activity Tapestry</h3>
+              <p className="text-xs text-muted-foreground">20-week submission consistency heatmap.</p>
+            </div>
+            <Badge variant="outline" className="border-emerald-brand/30 bg-emerald-brand/10 text-emerald-brand font-mono text-xs font-bold">
+              {totalSolved} Solved Total
             </Badge>
           </div>
-          <div className="h-40">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={weekData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
-                <defs>
-                  <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="day" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12 }} />
-                <Area type="monotone" dataKey="problems" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#areaGrad)" dot={{ r: 3, fill: "hsl(var(--primary))" }} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
 
-        <Card className="border-border/40 p-6 shadow-soft">
-          <h3 className="font-bold mb-4">Quick actions</h3>
-          <div className="space-y-2.5">
+          <div className="overflow-x-auto py-1">
+            <Heatmap data={heatmap} />
+          </div>
+
+          <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground pt-3 border-t border-border/30">
+            <div className="flex items-center gap-1.5 font-mono text-[11px]">
+              <span>Less</span>
+              {["bg-muted/40", "bg-primary/20", "bg-primary/40", "bg-primary/65", "bg-primary/90"].map((c, i) => (
+                <div key={i} className={`h-2.5 w-2.5 rounded-sm ${c}`} />
+              ))}
+              <span>More</span>
+            </div>
+            <span className="font-mono text-[11px]">Calculated from real execution runs</span>
+          </div>
+        </div>
+
+        {/* Weekly Velocity Gauge & Quick Actions */}
+        <div className="lg:col-span-4 rounded-3xl border border-border/50 bg-card/90 backdrop-blur-md p-6 shadow-soft flex flex-col justify-between transition-all hover:shadow-elegant">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="font-extrabold font-display text-base tracking-tight text-foreground">Weekly Velocity</h3>
+                <p className="text-xs text-muted-foreground">Problems completed per day</p>
+              </div>
+              <Badge variant="outline" className="font-mono text-[10px]">
+                {weekData.reduce((s, d) => s + d.problems, 0)} Solved
+              </Badge>
+            </div>
+
+            <div className="h-28 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={weekData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+                  <defs>
+                    <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 11 }} />
+                  <Area type="monotone" dataKey="problems" stroke="var(--primary)" strokeWidth={2} fill="url(#areaGrad)" dot={{ r: 2.5, fill: "var(--primary)" }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Quick Actions dock */}
+          <div className="pt-3 border-t border-border/40 space-y-2">
             {[
-              { label: "Practice problems", icon: Code2, to: "/practice", color: "text-emerald-brand", bg: "bg-emerald-brand/10" },
-              { label: "Ask AI tutor", icon: Bot, to: "/ai-tutor", color: "text-purple-400", bg: "bg-purple-400/10" },
-              { label: "View learning path", icon: Zap, to: "/learning-paths", color: "text-primary", bg: "bg-primary/10" },
+              { label: "Interactive Code Practice", icon: Code2, to: "/practice", color: "text-emerald-brand", bg: "bg-emerald-brand/10" },
+              { label: "Socratic AI Tutor", icon: Bot, to: "/ai-tutor", color: "text-primary", bg: "bg-primary/10" },
+              { label: "Curriculum Tracks", icon: BookOpen, to: "/subjects", color: "text-cyan-400", bg: "bg-cyan-400/10" },
             ].map((a) => (
               <Link
                 key={a.to}
                 to={a.to}
-                className="flex items-center gap-3 rounded-xl border border-border/40 p-3 hover:border-primary/30 hover:bg-primary/5 transition-all group"
+                className="flex items-center gap-2.5 rounded-xl border border-border/40 p-2 hover:border-primary/40 hover:bg-muted/30 transition-all text-xs font-semibold text-foreground group"
               >
-                <div className={`h-9 w-9 shrink-0 flex items-center justify-center rounded-xl ${a.bg}`}>
-                  <a.icon className={`h-4 w-4 ${a.color}`} />
+                <div className={`h-7 w-7 rounded-lg ${a.bg} flex items-center justify-center shrink-0`}>
+                  <a.icon className={`h-3.5 w-3.5 ${a.color}`} />
                 </div>
-                <span className="text-sm font-medium flex-1">{a.label}</span>
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                <span className="flex-1 truncate">{a.label}</span>
+                <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-transform group-hover:translate-x-0.5" />
               </Link>
             ))}
           </div>
-          <div className="mt-4 rounded-xl border border-border/40 bg-muted/20 p-3">
-            <p className="text-xs text-muted-foreground">
-              <span className="font-semibold text-foreground">Learning path:</span>{" "}
-              {profile?.learning_path ?? "Not set"}
-            </p>
-          </div>
-        </Card>
+        </div>
       </div>
     </div>
   );

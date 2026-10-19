@@ -121,7 +121,7 @@ function SidebarInner({
       {/* Nav */}
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-3 scrollbar-thin">
         {!collapsed && (
-          <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+          <div className="mb-2 px-3 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
             Main Menu
           </div>
         )}
@@ -133,7 +133,7 @@ function SidebarInner({
       {/* Bottom nav */}
       <div className="shrink-0 space-y-0.5 border-t border-sidebar-border/60 p-3">
         {!collapsed && (
-          <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+          <div className="mb-2 px-3 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
             Account
           </div>
         )}
@@ -289,11 +289,11 @@ export function AppLayout() {
           </div>
 
           {/* Right actions */}
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="ml-auto flex items-center gap-2">
             {/* Streak badge */}
             <Badge
               variant="outline"
-              className="hidden gap-1.5 border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 sm:flex font-semibold"
+              className="hidden gap-1.5 border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 sm:flex font-mono text-xs font-bold rounded-lg px-2.5 py-1"
             >
               🔥 {streak}
             </Badge>
@@ -301,7 +301,7 @@ export function AppLayout() {
             {/* XP badge */}
             <Badge
               variant="outline"
-              className="hidden gap-1.5 border-primary/30 bg-primary/10 text-primary sm:flex font-semibold"
+              className="hidden gap-1.5 border-primary/30 bg-primary/10 text-primary sm:flex font-mono text-xs font-bold rounded-lg px-2.5 py-1"
             >
               <Sparkles className="h-3 w-3" /> {xpDisplay} XP
             </Badge>
@@ -384,9 +384,9 @@ export function PageHeader({
   return (
     <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
       <div>
-        <h1 className="text-2xl font-black tracking-tight md:text-3xl">{title}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight font-display md:text-3xl text-foreground">{title}</h1>
         {description && (
-          <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>
+          <p className="mt-1.5 text-sm text-muted-foreground/90 font-medium">{description}</p>
         )}
       </div>
       {children && (
@@ -414,20 +414,20 @@ export function StatCard({
   trend?: "up" | "down" | "neutral";
 }) {
   return (
-    <div className="group rounded-2xl border border-border/40 bg-card p-5 shadow-soft transition-all hover:shadow-elegant hover:-translate-y-0.5">
+    <div className="group rounded-2xl border border-border/40 bg-card/90 backdrop-blur-sm p-5 shadow-soft transition-all duration-200 hover:shadow-elegant hover:-translate-y-0.5 hover:border-primary/30">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest font-mono">
           {label}
         </span>
-        <div className={cn("grid h-9 w-9 place-items-center rounded-xl", bg)}>
+        <div className={cn("grid h-9 w-9 place-items-center rounded-xl transition-transform duration-200 group-hover:scale-105", bg)}>
           <Icon className={cn("h-4.5 w-4.5", color)} />
         </div>
       </div>
-      <div className="mt-3 text-3xl font-black tracking-tight">{value}</div>
+      <div className="mt-3 text-3xl font-extrabold tracking-tight font-display text-foreground">{value}</div>
       {delta && (
         <div
           className={cn(
-            "mt-1.5 flex items-center gap-1 text-xs font-medium",
+            "mt-1.5 flex items-center gap-1 text-xs font-semibold",
             trend === "up" ? "text-emerald-brand" : trend === "down" ? "text-destructive" : "text-muted-foreground"
           )}
         >

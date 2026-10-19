@@ -171,24 +171,24 @@ function Hero() {
       {/* Multi-layer background */}
       <div className="absolute inset-0 bg-gradient-hero" />
       <div className="absolute inset-0" style={{
-        background: "radial-gradient(ellipse 80% 60% at 50% -10%, oklch(0.68 0.19 268 / 0.18), transparent)",
+        background: "radial-gradient(ellipse 80% 60% at 50% -10%, oklch(0.76 0.13 230 / 0.12), transparent)",
       }} />
       <ParticleField />
 
       {/* Floating orbs */}
-      <div className="absolute top-1/4 left-10 h-64 w-64 rounded-full blur-3xl opacity-20 animate-float" style={{ background: "oklch(0.52 0.22 268)" }} aria-hidden="true" />
-      <div className="absolute top-1/3 right-10 h-48 w-48 rounded-full blur-3xl opacity-15 animate-float" style={{ background: "oklch(0.72 0.16 165)", animationDelay: "2s" }} aria-hidden="true" />
-      <div className="absolute bottom-1/4 left-1/3 h-80 w-80 rounded-full blur-3xl opacity-10 animate-float" style={{ background: "oklch(0.62 0.2 320)", animationDelay: "4s" }} aria-hidden="true" />
+      <div className="absolute top-1/4 left-10 h-64 w-64 rounded-full blur-3xl opacity-20 animate-float" style={{ background: "oklch(0.64 0.15 240)" }} aria-hidden="true" />
+      <div className="absolute top-1/3 right-10 h-48 w-48 rounded-full blur-3xl opacity-15 animate-float" style={{ background: "oklch(0.72 0.10 185)", animationDelay: "2s" }} aria-hidden="true" />
+      <div className="absolute bottom-1/4 left-1/3 h-80 w-80 rounded-full blur-3xl opacity-10 animate-float" style={{ background: "oklch(0.75 0.15 75)", animationDelay: "4s" }} aria-hidden="true" />
 
       <div className="relative mx-auto max-w-7xl px-6 py-20 w-full">
         <div className="mx-auto max-w-4xl text-center">
           <div className="inline-flex items-center gap-2 mb-8 rounded-full border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-medium text-primary backdrop-blur-sm">
             <Sparkles className="h-3.5 w-3.5 animate-pulse" />
-            <span>AI-Powered · Adaptive · Personalized</span>
+            <span className="font-mono text-xs tracking-wider">AI-POWERED · ADAPTIVE · PERSONALIZED</span>
             <div className="h-1.5 w-1.5 rounded-full bg-emerald-brand animate-pulse" />
           </div>
 
-          <h1 className="text-5xl font-black tracking-tighter sm:text-7xl md:text-8xl leading-none mb-6">
+          <h1 className="text-5xl font-black font-display tracking-tighter sm:text-7xl md:text-8xl leading-none mb-6">
             <span className="block text-foreground">Master Tech</span>
             <span className="block text-gradient">Interviews</span>
             <span className="block text-foreground">with AI</span>
@@ -391,7 +391,7 @@ function Features() {
               style={{ animationDelay: `${i * 50}ms` }}
             >
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{ background: "radial-gradient(ellipse at top left, oklch(0.68 0.19 268 / 0.05), transparent 60%)" }}
+                style={{ background: "radial-gradient(ellipse at top left, oklch(0.76 0.13 230 / 0.06), transparent 60%)" }}
               />
               <div className={`inline-flex p-3 rounded-xl ${f.bg} mb-5`}>
                 <f.icon className={`h-5 w-5 ${f.color}`} />
