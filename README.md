@@ -385,6 +385,7 @@ In the **Environment Variables** section of your Vercel project, configure the f
 | Key | Example Value | Description |
 |---|---|---|
 | `NITRO_PRESET` | `vercel` | **Critical**: Tells the Nitro build engine to output native Vercel Serverless Functions |
+| `DANGEROUSLY_DEPLOY_VULNERABLE_TANSTACK_START_XSS` | `1` | **Required on Vercel**: Bypasses Vercel's npm security proxy check (CVE-2026-102989 / E403 block on `@tanstack/start-server-core`) |
 | `VITE_SUPABASE_URL` | `https://xyz.supabase.co` | Your Supabase project REST endpoint (client & server) |
 | `VITE_SUPABASE_ANON_KEY` | `eyJhbGciOi...` | Supabase public anonymous API key (client-safe) |
 | `SUPABASE_SERVICE_ROLE_KEY`| `eyJhbGciOi...` | Supabase privileged service key (server-only) |
@@ -394,7 +395,8 @@ In the **Environment Variables** section of your Vercel project, configure the f
 | `APP_URL` | `https://your-app.vercel.app` | Canonical production domain URL |
 
 > [!IMPORTANT]
-> The `NITRO_PRESET=vercel` environment variable is required. It instructs Nitro to package server functions into Vercel's `.vercel/output` format during the `npm run build` step.
+> - **`NITRO_PRESET=vercel`**: Required for TanStack Start to package server functions into Vercel's native `.vercel/output` structure.
+> - **`DANGEROUSLY_DEPLOY_VULNERABLE_TANSTACK_START_XSS=1`**: Vercel actively blocks `npm install` with `npm error 403 Forbidden` for `@tanstack/start-server-core@1.169.17` due to advisory GHSA-qx66-fv34-fjm8. Adding this environment variable instructs Vercel's build container to bypass the proxy block and complete installation.
 
 #### Step 4: Configure Supabase Auth Redirects
 Once Vercel generates your production URL (e.g., `https://adaptivly.vercel.app`):
