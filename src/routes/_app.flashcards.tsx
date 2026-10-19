@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Shuffle, RotateCw, Plus, BookOpen, Target, Zap, Flame, BrainCircuit, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Shuffle, RotateCw, Plus, BookOpen, Target, Zap, Flame, BrainCircuit, Sparkles, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth, supabaseBrowser } from "@/hooks/use-auth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
