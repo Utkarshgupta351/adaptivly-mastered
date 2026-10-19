@@ -17,15 +17,15 @@ function AuthBackground() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
       {/* Gradient orbs */}
-      <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full blur-3xl opacity-30 animate-float"
-        style={{ background: "oklch(0.52 0.22 268 / 0.6)" }} />
+      <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full blur-3xl opacity-25 animate-float"
+        style={{ background: "oklch(0.64 0.15 240 / 0.5)" }} />
       <div className="absolute top-1/2 -right-20 h-80 w-80 rounded-full blur-3xl opacity-20 animate-float"
-        style={{ background: "oklch(0.72 0.16 165 / 0.6)", animationDelay: "3s" }} />
+        style={{ background: "oklch(0.72 0.10 185 / 0.4)", animationDelay: "3s" }} />
       <div className="absolute -bottom-20 left-1/3 h-64 w-64 rounded-full blur-3xl opacity-15 animate-float"
-        style={{ background: "oklch(0.62 0.2 320 / 0.6)", animationDelay: "6s" }} />
+        style={{ background: "oklch(0.75 0.15 75 / 0.3)", animationDelay: "6s" }} />
       {/* Grid pattern */}
       <div className="absolute inset-0 opacity-[0.03]" style={{
-        backgroundImage: "linear-gradient(oklch(0.52 0.22 268) 1px, transparent 1px), linear-gradient(90deg, oklch(0.52 0.22 268) 1px, transparent 1px)",
+        backgroundImage: "linear-gradient(oklch(0.76 0.13 230 / 0.25) 1px, transparent 1px), linear-gradient(90deg, oklch(0.76 0.13 230 / 0.25) 1px, transparent 1px)",
         backgroundSize: "60px 60px",
       }} />
     </div>
