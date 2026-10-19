@@ -121,7 +121,7 @@ function SidebarInner({
       {/* Nav */}
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-3 scrollbar-thin">
         {!collapsed && (
-          <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+          <div className="mb-2 px-3 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
             Main Menu
           </div>
         )}
@@ -133,7 +133,7 @@ function SidebarInner({
       {/* Bottom nav */}
       <div className="shrink-0 space-y-0.5 border-t border-sidebar-border/60 p-3">
         {!collapsed && (
-          <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+          <div className="mb-2 px-3 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
             Account
           </div>
         )}
@@ -289,11 +289,11 @@ export function AppLayout() {
           </div>
 
           {/* Right actions */}
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="ml-auto flex items-center gap-2">
             {/* Streak badge */}
             <Badge
               variant="outline"
-              className="hidden gap-1.5 border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 sm:flex font-semibold"
+              className="hidden gap-1.5 border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 sm:flex font-mono text-xs font-bold rounded-lg px-2.5 py-1"
             >
               🔥 {streak}
             </Badge>
@@ -301,7 +301,7 @@ export function AppLayout() {
             {/* XP badge */}
             <Badge
               variant="outline"
-              className="hidden gap-1.5 border-primary/30 bg-primary/10 text-primary sm:flex font-semibold"
+              className="hidden gap-1.5 border-primary/30 bg-primary/10 text-primary sm:flex font-mono text-xs font-bold rounded-lg px-2.5 py-1"
             >
               <Sparkles className="h-3 w-3" /> {xpDisplay} XP
             </Badge>
