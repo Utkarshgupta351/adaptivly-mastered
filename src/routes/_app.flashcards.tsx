@@ -35,6 +35,89 @@ function sm2(rating: "easy" | "good" | "hard", easeFactor: number, intervalDays:
   return { newEase, newInterval, nextReview };
 }
 
+const STARTER_FLASHCARDS: Record<string, { question: string; answer: string; difficulty: "Easy" | "Medium" | "Hard" }[]> = {
+  "DSA Fundamentals": [
+    {
+      question: "What is the time and space complexity of QuickSort in the average and worst cases?",
+      answer: "Average Time: O(N log N)\nWorst Time: O(N²) (when pivot choices produce maximally unbalanced partitions)\nSpace Complexity: O(log N) auxiliary recursion call stack space.",
+      difficulty: "Medium"
+    },
+    {
+      question: "Explain Floyd's Cycle-Finding Algorithm (Tortoise and Hare) for Linked Lists.",
+      answer: "Maintain two pointers: slow (advances 1 node) and fast (advances 2 nodes).\nIf a cycle exists, fast and slow will intersect within the loop.\nTime: O(N), Auxiliary Space: O(1).",
+      difficulty: "Easy"
+    },
+    {
+      question: "When should you use a Hash Map vs. a Balanced Binary Search Tree (e.g. Red-Black Tree)?",
+      answer: "Hash Map: O(1) average lookup/insert, but unordered.\nBalanced BST: O(log N) lookup/insert, but maintains keys in sorted order, supporting floor/ceiling and range queries.",
+      difficulty: "Medium"
+    },
+    {
+      question: "What is the core difference between Dynamic Programming Memoization and Tabulation?",
+      answer: "Top-Down (Memoization): Recursive with caching; only solves subproblems that are reachable.\nBottom-Up (Tabulation): Iterative table filling from base cases; eliminates recursive stack overhead.",
+      difficulty: "Hard"
+    }
+  ],
+  "OS & DBMS": [
+    {
+      question: "What are the four Coffman conditions required for a Deadlock to occur?",
+      answer: "1. Mutual Exclusion: At least one unshareable resource.\n2. Hold and Wait: Process holds resource while requesting another.\n3. No Preemption: Resources cannot be forcibly revoked.\n4. Circular Wait: Circular chain of processes each waiting for next.",
+      difficulty: "Medium"
+    },
+    {
+      question: "What do the ACID properties guarantee in relational database transactions?",
+      answer: "Atomicity: All operations succeed or entire transaction aborts.\nConsistency: Maintains valid database integrity constraints.\nIsolation: Concurrent transactions execute without cross-contamination.\nDurability: Committed records survive crashes via Write-Ahead Logging (WAL).",
+      difficulty: "Easy"
+    },
+    {
+      question: "What is the fundamental difference between a Process and a Thread?",
+      answer: "Process: Isolated execution unit with private address space, file handles, and memory map.\nThread: Lightweight unit within a process sharing heap, code, and globals, but having private stack/registers.",
+      difficulty: "Easy"
+    },
+    {
+      question: "Why do relational database engines use B+ Trees rather than standard Binary Search Trees for indexes?",
+      answer: "B+ Trees have high fan-out (hundreds of keys per node), reducing disk I/O depth to 3-4 levels.\nAll values reside in leaf nodes connected by a linked list, enabling O(log N) point lookups and linear range scans.",
+      difficulty: "Hard"
+    }
+  ],
+  "System Design": [
+    {
+      question: "Explain the CAP Theorem and its real-world engineering implications.",
+      answer: "In a distributed system, you can choose at most two of: Consistency, Availability, and Partition Tolerance.\nBecause network latency and cable cuts make partitions inevitable, distributed systems must trade off between Consistency (CP) and Availability (AP) during a split.",
+      difficulty: "Medium"
+    },
+    {
+      question: "How does Consistent Hashing minimize cache invalidation during cluster scaling?",
+      answer: "Maps both servers and cache keys to a virtual 360° ring.\nWhen a server is added or removed, only K/N keys migrate (where K is total keys, N is servers) rather than remapping all keys.",
+      difficulty: "Hard"
+    },
+    {
+      question: "Explain the difference between Vertical Scaling and Horizontal Scaling.",
+      answer: "Vertical (Scale-Up): Adding faster CPU, RAM, or NVMe disks to one server; limited by hardware ceiling and creates single point of failure.\nHorizontal (Scale-Out): Adding more commodity instances behind a load balancer; provides high availability and near-infinite scale.",
+      difficulty: "Easy"
+    }
+  ],
+  "Computer Networks": [
+    {
+      question: "Walk through the TCP 3-Way Handshake step-by-step.",
+      answer: "1. Client -> Server: SYN (synchronize initial sequence number X)\n2. Server -> Client: SYN-ACK (acknowledges X+1, sends server sequence number Y)\n3. Client -> Server: ACK (acknowledges Y+1)\nConnection is now in ESTABLISHED state.",
+      difficulty: "Easy"
+    },
+    {
+      question: "Compare TCP vs. UDP and when you would choose one over the other.",
+      answer: "TCP: Reliable, ordered delivery, flow control, congestion control. Ideal for HTTP/Web, DB connections, and file transfer.\nUDP: Connectionless, zero handshake delay, no retransmissions. Ideal for real-time multiplayer gaming, DNS, and WebRTC streaming.",
+      difficulty: "Easy"
+    }
+  ],
+  "Behavioral": [
+    {
+      question: "How should you structure technical interview behavioral answers using the STAR method?",
+      answer: "Situation: Context and business background (15%)\nTask: The specific challenge, risk, or technical obstacle assigned to you (15%)\nAction: Concrete technical decisions, trade-offs, and implementation steps YOU drove (55%)\nResult: Measurable business or engineering outcome (latency reduced, zero downtime, adoption rate) (15%)",
+      difficulty: "Easy"
+    }
+  ]
+};
+
 function Flashcards() {
   const { user, token } = useAuth();
   const queryClient = useQueryClient();
@@ -98,12 +181,37 @@ function Flashcards() {
   const decks = decksQuery.data || [];
   const activeDeckId = decks[activeDeckIdx]?.id;
 
+  const [isSeeding, setIsSeeding] = useState(false);
+
   // 2. Fetch Cards for active deck
   const cardsQuery = useQuery({
     queryKey: ["flashcards", activeDeckId],
     queryFn: async () => {
       if (!activeDeckId || !user) return [];
-      const { data: cards } = await supabaseBrowser.from("flashcards").select("*").eq("deck_id", activeDeckId);
+      let { data: cards } = await supabaseBrowser.from("flashcards").select("*").eq("deck_id", activeDeckId);
+      
+      // If deck has no cards, auto-seed with curated starter flashcards
+      if (!cards || cards.length === 0) {
+        const activeDeck = decks[activeDeckIdx];
+        const starterList = (activeDeck?.name && STARTER_FLASHCARDS[activeDeck.name])
+          ? STARTER_FLASHCARDS[activeDeck.name]
+          : STARTER_FLASHCARDS["DSA Fundamentals"];
+
+        if (starterList && starterList.length > 0) {
+          const insertData = starterList.map(s => ({
+            deck_id: activeDeckId,
+            question: s.question,
+            answer: s.answer,
+            difficulty: s.difficulty,
+          }));
+          const { data: newCards } = await supabaseBrowser.from("flashcards").insert(insertData).select("*");
+          cards = newCards && newCards.length > 0
+            ? newCards
+            : insertData.map((c, i) => ({ ...c, id: `seed-${i}`, created_at: new Date().toISOString() }));
+          queryClient.invalidateQueries({ queryKey: ["flashcard_decks"] });
+        }
+      }
+
       if (!cards || cards.length === 0) return [];
       
       const cardIds = cards.map(c => c.id);
@@ -131,6 +239,29 @@ function Flashcards() {
     },
     enabled: !!activeDeckId && !!user,
   });
+
+  const handleSeedStarter = async () => {
+    if (!activeDeckId || !user) return;
+    setIsSeeding(true);
+    const activeDeck = decks[activeDeckIdx];
+    const starterList = (activeDeck?.name && STARTER_FLASHCARDS[activeDeck.name])
+      ? STARTER_FLASHCARDS[activeDeck.name]
+      : STARTER_FLASHCARDS["DSA Fundamentals"];
+
+    if (starterList && starterList.length > 0) {
+      const insertData = starterList.map(s => ({
+        deck_id: activeDeckId,
+        question: s.question,
+        answer: s.answer,
+        difficulty: s.difficulty,
+      }));
+      await supabaseBrowser.from("flashcards").insert(insertData);
+      toast.success("Loaded curated starter flashcards!");
+      queryClient.invalidateQueries({ queryKey: ["flashcards", activeDeckId] });
+      queryClient.invalidateQueries({ queryKey: ["flashcard_decks"] });
+    }
+    setIsSeeding(false);
+  };
 
   useEffect(() => {
     if (cardsQuery.data) {
@@ -322,7 +453,10 @@ function Flashcards() {
                <BookOpen className="h-8 w-8 text-muted-foreground" />
              </div>
              <h3 className="text-lg font-bold">This deck is empty</h3>
-             <p className="text-sm text-muted-foreground mt-2 max-w-sm">Use the AI Generate button above to automatically create flashcards from your notes.</p>
+             <p className="text-sm text-muted-foreground mt-2 max-w-sm">Use the AI Generate button above to create cards, or seed curated high-yield interview flashcards.</p>
+             <Button onClick={handleSeedStarter} disabled={isSeeding} className="mt-4 rounded-xl gap-2 bg-gradient-primary">
+               {isSeeding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Load Curated Flashcards
+             </Button>
           </Card>
         ) : (
           <button
@@ -370,8 +504,35 @@ function Flashcards() {
           <ChevronLeft className="h-4 w-4" /> Previous
         </Button>
 
-        <div className="flex gap-2">
-          {/* Rating buttons removed as requested */}
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {flipped && card && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => rate("hard")}
+                className="rounded-xl border-destructive/40 text-destructive hover:bg-destructive/10 text-xs font-semibold px-3"
+              >
+                🔴 Hard (1d)
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => rate("good")}
+                className="rounded-xl border-amber-500/40 text-amber-500 hover:bg-amber-500/10 text-xs font-semibold px-3"
+              >
+                🟡 Good (3d)
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => rate("easy")}
+                className="rounded-xl border-emerald-brand/40 text-emerald-brand hover:bg-emerald-brand/10 text-xs font-semibold px-3"
+              >
+                🟢 Easy (6d)
+              </Button>
+            </>
+          )}
         </div>
 
         <Button onClick={next} className="bg-gradient-primary shadow-elegant rounded-xl gap-1.5" disabled={idx >= total - 1 || !card}>
