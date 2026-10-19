@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Binary, Cpu, Database, Network, Boxes, Wrench, Server, Globe, Brain,
-  Search, ArrowRight, BookOpen, Sparkles, CheckCircle2, Play, Layers, FileCode, X
+  Search, ArrowRight, BookOpen, Sparkles, CheckCircle2, Play, Layers, FileCode, X, Code2
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth, supabaseBrowser } from "@/hooks/use-auth";
@@ -211,8 +211,8 @@ function Subjects() {
 
     // Load solved problem stats by topic
     Promise.all([
-      supabaseBrowser.from("problems").select("topic"),
-      supabaseBrowser.from("user_problem_status").select("problem_id, status").eq("user_id", user.id).eq("status", "solved"),
+      supabaseBrowser.from("problems").select("id, topic"),
+      supabaseBrowser.from("user_problem_status").select("problem_id, solved").eq("user_id", user.id).eq("solved", true),
     ]).then(([problemsRes, statusRes]) => {
       const totals: Record<string, number> = {};
       (problemsRes.data ?? []).forEach((p: any) => {
