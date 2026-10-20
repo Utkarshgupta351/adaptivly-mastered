@@ -3,7 +3,7 @@ import { useState, useEffect, type ReactNode } from "react";
 import {
   LayoutDashboard, GitBranch, BookOpen, Calendar, Code2, MessagesSquare, Bot,
   StickyNote, Youtube, LineChart, Trophy, User, Settings, ChevronLeft, ChevronRight,
-  Search, Bell, Moon, Sun, Menu, Sparkles, Layers, Zap, X, LogOut,
+  Search, Bell, Moon, Sun, Menu, Sparkles, Layers, Zap, X, LogOut, Trash2, CheckCircle2, Flame,
 } from "lucide-react";
 import { Logo } from "@/components/landing";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { useAuth, supabaseBrowser } from "@/hooks/use-auth";
@@ -161,6 +162,181 @@ function SidebarInner({
 
 
     </div>
+  );
+}
+
+interface NotificationItem {
+  id: string;
+  title: string;
+  description: string;
+  time: string;
+  read: boolean;
+  type: "streak" | "flashcard" | "interview" | "tutor";
+  link: string;
+}
+
+const DEFAULT_NOTIFICATIONS: NotificationItem[] = [
+  {
+    id: "notif-1",
+    title: "Spaced Repetition Due",
+    description: "You have review items scheduled today under SM-2 algorithm.",
+    time: "10m ago",
+    read: false,
+    type: "flashcard",
+    link: "/flashcards"
+  },
+  {
+    id: "notif-2",
+    title: "Daily Streak Active",
+    description: "Complete 1 coding problem today to retain your streak flame.",
+    time: "1h ago",
+    read: false,
+    type: "streak",
+    link: "/practice"
+  },
+  {
+    id: "notif-3",
+    title: "Socratic AI Tutor Ready",
+    description: "Ask Gemini 2.5 to explain any algorithm or debug complex logic.",
+    time: "3h ago",
+    read: false,
+    type: "tutor",
+    link: "/ai-tutor"
+  },
+  {
+    id: "notif-4",
+    title: "Mock Interview Analysis",
+    description: "View your communication and technical accuracy scores.",
+    time: "1d ago",
+    read: true,
+    type: "interview",
+    link: "/analytics"
+  }
+];
+
+function NotificationCenter() {
+  const [notifications, setNotifications] = useState<NotificationItem[]>(() => {
+    try {
+      const saved = localStorage.getItem("adaptivly_notifications");
+      return saved ? JSON.parse(saved) : DEFAULT_NOTIFICATIONS;
+    } catch {
+      return DEFAULT_NOTIFICATIONS;
+    }
+  });
+  const [open, setOpen] = useState(false);
+
+  const saveNotifications = (items: NotificationItem[]) => {
+    setNotifications(items);
+    try {
+      localStorage.setItem("adaptivly_notifications", JSON.stringify(items));
+    } catch {}
+  };
+
+  const markAllRead = () => {
+    const updated = notifications.map(n => ({ ...n, read: true }));
+    saveNotifications(updated);
+  };
+
+  const markAsRead = (id: string) => {
+    const updated = notifications.map(n => n.id === id ? { ...n, read: true } : n);
+    saveNotifications(updated);
+  };
+
+  const clearAll = () => {
+    saveNotifications([]);
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative rounded-xl" aria-label="Notifications">
+          <Bell className="h-4 w-4" />
+          {unreadCount > 0 && (
+            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive ring-2 ring-background animate-pulse" />
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80 md:w-96 p-0 rounded-2xl border-border/50 bg-card shadow-elegant">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-border/40">
+          <div className="flex items-center gap-2">
+            <h4 className="font-extrabold font-display text-sm tracking-tight text-foreground">Notifications</h4>
+            {unreadCount > 0 && (
+              <Badge variant="outline" className="font-mono text-[10px] bg-primary/10 text-primary border-primary/20">
+                {unreadCount} new
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            {unreadCount > 0 && (
+              <Button variant="ghost" size="sm" onClick={markAllRead} className="h-7 px-2 text-[11px] font-semibold text-primary hover:text-primary">
+                Mark all read
+              </Button>
+            )}
+            {notifications.length > 0 && (
+              <Button variant="ghost" size="icon" onClick={clearAll} className="h-7 w-7 text-muted-foreground hover:text-foreground rounded-lg" title="Clear all">
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Notification list */}
+        <div className="max-h-80 overflow-y-auto divide-y divide-border/30 scrollbar-thin">
+          {notifications.length === 0 ? (
+            <div className="py-10 text-center px-4">
+              <CheckCircle2 className="h-8 w-8 text-emerald-brand mx-auto mb-2 opacity-80" />
+              <p className="text-xs font-semibold text-foreground">All caught up!</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">No new alerts or review reminders.</p>
+            </div>
+          ) : (
+            notifications.map((n) => (
+              <Link
+                key={n.id}
+                to={n.link}
+                onClick={() => {
+                  markAsRead(n.id);
+                  setOpen(false);
+                }}
+                className={cn(
+                  "flex items-start gap-3 p-3.5 transition-colors hover:bg-muted/40 text-left block",
+                  !n.read ? "bg-primary/[0.03]" : "opacity-80"
+                )}
+              >
+                <div className={cn(
+                  "h-8 w-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5",
+                  n.type === "flashcard" ? "bg-pink-500/10 text-pink-500" :
+                  n.type === "streak" ? "bg-amber-500/10 text-amber-500" :
+                  n.type === "tutor" ? "bg-purple-500/10 text-purple-400" :
+                  "bg-primary/10 text-primary"
+                )}>
+                  {n.type === "flashcard" && <Layers className="h-4 w-4" />}
+                  {n.type === "streak" && <Flame className="h-4 w-4" />}
+                  {n.type === "tutor" && <Bot className="h-4 w-4" />}
+                  {n.type === "interview" && <Trophy className="h-4 w-4" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-1">
+                    <p className={cn("text-xs leading-none truncate", !n.read ? "font-bold text-foreground" : "font-medium text-foreground/80")}>
+                      {n.title}
+                    </p>
+                    <span className="text-[10px] font-mono text-muted-foreground shrink-0">{n.time}</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1 leading-snug line-clamp-2">
+                    {n.description}
+                  </p>
+                </div>
+                {!n.read && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0 mt-1.5" />
+                )}
+              </Link>
+            ))
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -310,10 +486,7 @@ export function AppLayout() {
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
 
-            <Button variant="ghost" size="icon" className="relative rounded-xl" aria-label="Notifications">
-              <Bell className="h-4 w-4" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive ring-2 ring-background" />
-            </Button>
+            <NotificationCenter />
 
             {/* Avatar menu */}
             <DropdownMenu>
